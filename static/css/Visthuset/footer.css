@@ -1,0 +1,38 @@
+footer {
+	width: 100%;
+	padding-top: 2%;
+	clear: both;
+}
+
+footer div {
+		background-color: rgb(255,255,255,0.5);
+		display:inline-block;
+		width: 30%;
+		height: 250px;
+		box-sizing: content-box;
+		position: relative;
+		margin: auto auto;
+
+	}
+footer p{
+	color: black;
+	text-align: left;
+	font-style: oblique;
+}
+footer a{
+	color: black;
+	align: left;
+	text-decoration: none;
+}
+
+.footercontainer {
+	display: inline;
+	width: 150px;
+	margin: 10px auto;
+	position: relative;
+	float: left;
+}
+
+.footer-img {
+	display: inline;
+}

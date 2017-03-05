@@ -1,0 +1,151 @@
+nav {
+	width: 100%;
+	height: 200px;
+	margin: 0 auto;
+	background: #434434;
+}
+
+nav div {
+	display: inline-block;
+	width: 100%;
+	float: left;
+	position: relative;
+	text-decoration: none;
+	font-size: 22px;
+	font-style: italic;
+	color: #FFFFFF;
+}
+
+.imagecontainer {
+	display: inline-block;
+	float: right;
+	width: 73%;
+	height: 150px;
+}
+
+.langcontainer {
+	display: inline;
+}
+
+.textcontainer{
+	float: left;
+	display: inline-block;
+	height: 150px;
+	width: 23%;
+}
+
+.textcontainer h1 {
+	padding: 2% 0 0 1%;
+	font-weight: bold;
+}
+
+.textcontainer h2 {
+	font-size: 18px;
+}
+
+.navimg {
+	display: inline;
+	width: 125px;
+	float: right;
+	margin: 1% 0.1%;
+}
+
+/* navbar list */
+nav ul {
+	width: 100%;
+	background: #434434;
+	list-style: none;
+	position: relative;
+	display: inline-table;
+	border: 10px solid #434434;
+}
+
+nav ul:after {
+	clear: both;
+	display: block;	
+}
+
+nav ul li {	
+	float: left;
+	margin: 0% 1.5%;
+}
+
+nav ul li:hover > ul {
+	display: block;	
+}	
+
+
+nav ul li:hover {
+	background: #434434;
+}	
+
+nav ul li:hover a {
+	color: #fff;
+}
+		
+
+nav ul li a {
+	display: block; padding: 0px 8px;
+	color: #fff; text-decoration: none;
+		
+	-moz-border-radius: 15px; 
+    -webkit-border-radius: 15px; 
+    border-radius: 15px;
+		}
+	
+/* list in list */
+nav ul ul {
+	background: #434434;
+	padding: 0;
+	margin: 0;
+	width: 240px; 
+	position: absolute;
+	display: none;
+				
+	-moz-border-radius: 15px; 
+    -webkit-border-radius: 15px; 
+    border-radius: 15px;			
+	}
+		
+nav ul ul li {
+	float: right;
+	width:240px;
+	position: relative;
+			
+	-moz-border-radius: 15px; 
+    -webkit-border-radius: 15px; 
+    border-radius: 15px;
+}
+			
+			 		
+nav ul ul li a {
+	padding: 10px 40px;
+	color: #fff;
+				
+	-moz-border-radius: 15px; 
+    -webkit-border-radius: 15px; 
+    border-radius: 15px;
+}	
+				
+nav ul ul li a:hover {
+	background: #434434;
+
+	background: -linear-gradient(top, #434434 0%, #bbbbbb 100%);
+	background: -moz-linear-gradient(top, #434434 0%, #bbbbbb 100%);			   
+	background: -webkit-linear-gradient(top, #434434 0%,#bbbbbb 100%);
+	
+	-moz-border-radius: 15px; 
+    -webkit-border-radius: 15px; 
+    border-radius: 15px;
+			  
+}
+nav ul ul ul {
+	position: absolute;
+	left: 100%;
+	top:0;		
+}
+
+nav a:visited {
+	text-decoration: none;
+	color: #fff;
+}

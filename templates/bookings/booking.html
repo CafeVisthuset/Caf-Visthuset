@@ -1,0 +1,18 @@
+{% extends '../visthuset_base.html' %}
+
+{% load rest_framework %}
+
+{% block title %}<title>Cafe Visthuset - Boka cyklar</title>{% endblock %}
+{% block header %}<h2>Boka cyklar!</h2>{% endblock %}
+
+{% block content %}
+
+{{ message }}
+
+<form action="" method="post">
+	{% csrf_token %}
+	{% render_form serializer template_pack='rest_framework/vertical' %}
+	<input type="submit" value="Submit"/>
+</form>
+
+{% endblock %}

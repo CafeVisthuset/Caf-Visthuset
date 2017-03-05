@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    {% load static %}
+    {% block title %}<title>Välkommen till Cafe Visthuset!</title>{% endblock %}
+    {% include 'stylesheets.html' %}
+  </head>
+  
+  <body>
+    <nav>{% include 'navbar.html' %}</nav>
+
+    <header>{% block header %}{% endblock %}</header>
+
+    <main style="display: block; width:100%;">
+      <section>
+      	{% block sidebar %}{% endblock %}
+      </section>
+      <section>
+        {% block content %}{% endblock %}
+      </section>
+    </main>
+
+    <footer style="width: 100%; display:block; align: bottom;">{% include 'footer.html' %}</footer>
+
+    {% include 'javascripts.html' %}
+  </body>
+</html>

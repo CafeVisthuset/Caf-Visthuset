@@ -1,0 +1,27 @@
+{% extends 'visthuset_base.html' %}
+{% load static %}
+
+{% block title %}<title>Välkommen till Café Visthusets API</title>{% endblock %}
+
+{% block header %}<h1>Välkommen till Café Visthusets API!</h1>{% endblock %}
+
+{% block content %}
+      <h2>Vad vill du göra?</h2>
+   <div style="margin-top: -25px" id="message">
+      <p>Sidan är för tillfället under konstruktion.</p>
+   </div>
+    	<a href="/admin/"><div class="api-container">
+    		<div class="imgcontainer">
+    	    <img class="topicimg" src="{% static 'img/api/ingrid.jpg' %}" alt="Logga in!"/>
+    	    </div>
+    	    <h3>Logga in!</h3><br>
+  	  </div></a>
+  	  <a href="/docs/"><div class="api-container">
+  	  		<div class="imgcontainer">
+  		    <img class = "topicimg" src="{% static 'img/api/glass.jpg' %}" alt="Kolla in vår dokumentation!" />
+    		</div>
+    		<h3>Kolla in vår dokumentation!</h3>
+      </div></a>
+{% endblock %}
+
+

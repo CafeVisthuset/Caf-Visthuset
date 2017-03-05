@@ -1,0 +1,11 @@
+
+{% if latest_cleanday_list %}
+	<ul>
+		{% for day in latest_cleanday_list %}
+			<li><a href="{% url 'cleaning:detail' day.id %}">{{ day.signature }}</a></li>
+		{% endfor %}
+	</ul>
+	{% else %}
+	<p>No cleaning days have been made yet... </p>
+{% endif %}
+

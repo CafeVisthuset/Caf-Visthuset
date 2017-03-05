@@ -1,0 +1,82 @@
+html{
+	background: white url("../images/under_construction.jpg") no-repeat left top;
+	background-size: 100%;
+}
+body {
+
+	font-family: Optima, Geneva, sans-serif;
+	color: white;
+	text-align: center;
+}
+
+h1, h2 {
+	font-size: 56px;
+	font-variant: small-caps;
+	text-shadow: 2px 2px black;
+}
+
+h3 {
+	font-size: 22px;
+}
+.foot{
+		color: black;
+		text-align: left;
+		font-variant:normal;
+}
+
+p {
+	text-align: center;
+}
+
+section{
+	padding: 0 10%;
+	display: inline-block;
+}
+a div {
+	background-color: rgb(255,255,255);
+	float: left;
+	box-sizing: border-box;
+	width: 38%;
+	display: inline-block;
+	height: 575px;
+	border: 5px solid black;
+	margin: 0 5%;
+	-webkit-transition: width 0.5s height 0.5s;
+	transition: ease-in 0.5s;
+}
+a div:hover {
+	width:42%;
+	height: 625px;
+}
+
+a:visited{
+	color: rgb(0,0,0);
+}
+
+
+.topicimg{
+	shape-inside: auto;
+	margin: 0 auto;
+	padding: 2%;
+	}
+
+footer div {
+		background-color: rgb(255,255,255,0.5);
+		display:inline-block;
+		width: 33%;
+		height: 150px;
+		box-sizing: content-box;
+		border-width: 0px;
+
+	}
+footer p{
+	color: black;
+	text-align: left;
+	font-style: oblique;
+}
+footer a{
+	color: black;
+	align: left;
+	text-decoration: none;
+}
+
