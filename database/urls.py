@@ -15,10 +15,8 @@ urlpatterns = [
     url(r'^(?P<booking_id>[0-9]+)/$', views.booking, name='booking'),
     #url(r'^accomodation/', views.AccomodationBookingView.as_view()),
     #url(r'^bikes/', views.BikeBookingView, name='bikebooking'),
-    url(r'^thanks/', views.ThanksView, name= 'thanks'),
     url(r'^test/', views.trial),
     url(r'^calendar/$', calendars.calendar, name='eventcalendar'),
     url(r'^bikebooking/', views.BikeBookingResponse.as_view(), name='bike_booking'),
-    url(r'^bikebooking/resp', views.BookBikeView),
-    url(r'^confirmation/$', views.confirmation, name='confirmation'),
+    url(r'^(?P<pk>[0-9]+)/thanks/$', views.confirmation_view, name='confirmation'),
     ]

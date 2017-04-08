@@ -1,0 +1,38 @@
+{% extends "../visthuset_base.html" %}
+{% block title %}<title>Tack för din bokning!</title>{% endblock %} 
+
+{% block header %}<h1>Tack för din bokning!</h1>{% endblock %} 
+
+{% block content %}
+<h3>Ditt bokningsnummer är {{ booking_number }}</h3>
+
+<div>
+<p>{{ message }}</p>
+{% if included_bikes.keys is not None %}
+	<h3>Cyklar</h3>
+	<p>
+	{% for key, value in included_bikes.items %}
+		{{ value }} st {{ key }}<br>
+	{% endfor %}
+	</p>
+{% endif %}
+
+{% if included_lunches %}
+	<h3>Luncher</h3>
+	<p>
+	{% for key, value in included_lunches.items %}
+		{{ value }} {{ key }}<br>
+	{% endfor %}
+	</p>
+{% endif %}
+</div>
+
+<div>
+	<h3>Vill du ha den här informationen i ett epost?</h3>
+	
+	<form action="mailto:{{ email }}">
+		<input type="submit" value="Skicka bekräftelse med epost">
+	</form>
+</div>
+
+{% endblock content %}

@@ -64,6 +64,12 @@ Contain a model for bike availability(BikeAvailable) with manager (BikeAvailable
 and model for bikes (Bike). It also contains a model for bike extras such as childseats.
 Additionally this section contains a model for damages on each bike (Damages).
 '''
+class BikeManager(models.Manager):
+    
+    def adult_bikes(self):
+        return super(BikeManager, self).adult_bikes().filter(
+            Q(attribute='adult'))
+
 # Bike model
 class Bike(models.Model):
     number = models.PositiveIntegerField(verbose_name= 'Nummer')
@@ -76,8 +82,17 @@ class Bike(models.Model):
     extra = models.CharField(choices=Bike_Extra_Choices, max_length= 15,
                              verbose_name='Knuten till tillbehör', blank=True)
     
+    #objects = models.Manager()
+    #bikes = BikeManager()
+    
     def __str__(self):
-        return "%scykel %s" % (self.attribute, self.number)
+        attr = {
+            'adult': 'vuxen',
+            'young': 'ungdom',
+            'child': 'barn',
+            'smallChild': 'småbarn',
+            }
+        return "%scykel %s" % (attr[self.attribute], self.number)
     
     class Meta:
         verbose_name = 'cykel'
@@ -222,27 +237,22 @@ class GuestManager(models.Manager):
         '''
         Gets or creates a guest user based on information passed from a booking form.
         '''
-        print(kwargs['kwargs'])
         try:
             # first try to find by email
             guest = Guest.objects.get(email=email)
-            print('success')
         except MultipleObjectsReturned:
             # specify the search
-            print('tried to be more specific')
             guest = Guest.objects.get(first_name=first_name, last_name=last_name, email=email)
             
         except ObjectDoesNotExist:
             # If the object doees not exist, create a new one
             password = User.objects.make_random_password()
-            print
             try:
                 guest = Guest.objects.create(username=email, password=password, first_name=first_name,
                               last_name = last_name, email=email,
                               phone_number = kwargs['kwargs']['phone_number'],
                               newsletter = kwargs['kwargs']['newsletter'])
             except:
-                print('last option')
                 # if the username is already taken, create a unique username for the person
                 # this hopefully works, otherwise it fails.
                 username= '.'.join(['email', 'first_name', 'last_name'])
@@ -342,16 +352,20 @@ class BookingManager(models.Manager):
     '''
     Manager for managing bookings. Use this manager for all bookings!
     
-    Ex of procedure for creating a new bookng
+    Ex of procedure for creating a booking.
+    
+    First call the manager to create a new instance of the booking-class
     1. Initiate booking,
-        Booking.book.create_booking(guest, start_date, end_date, 
+        booking = Booking.book.create_booking(guest, start_date, end_date, 
                                     numberOfGuests, special request)
     
-    2. Set attributes of booking, use the setter functions
-        ex. Booking.book.setBikeBooking()
+    Then update the booking instance and related instaces through the class
+    methods.
+    2. Set attributes of booking instance, use the class methods
+        ex. booking.setBikeBooking()
         
     3. Get attributes for booking to be returned to user (optional)
-        ex. Booking.book.getBikeBooking(booking_number)
+        ex. booking.getBikeBooking(booking_number)
     
     # Basic functions
     :create_booking
@@ -365,21 +379,15 @@ class BookingManager(models.Manager):
     :getBikeBooking
     :getLunchBooking
     :getAccomodationBooking
-    # Setters
-    :setBikeBooking
-    :setBikeExtraBooking
-    :setLunchBooking
-    :setAccomodationBooking
      
     '''
     # Create, update, delete
     def create_booking(self, guest, start_date, end_date, numberOfGuests, special_requests):
-        booking = self.create(guest=guest,
+        return self.create(guest=guest,
                               start_date=start_date, 
                               end_date=end_date,
                               numberOfGuests=numberOfGuests,
                               special_requests=special_requests)
-        return booking
         
     def update_booking(self, booking_number, **kwargs):
         booking = self.get(booking=booking_number)
@@ -391,81 +399,6 @@ class BookingManager(models.Manager):
         '''
         pass
     
-    # Functions to update specific parts of bookings
-    def check_in_booking(self, booking_number):
-        '''
-        Check in guest. NEED TESTING
-        '''
-        booking = self.get(booking=booking_number)
-        return booking.update(checked_in=True)
-    
-    def check_out_booking(self, booking_number):
-        '''
-        Check out guest. NEED TESTING
-        '''
-        booking = self.get(booking=booking_number)
-        return booking.update(checked_out=True)
-    
-    # Getters
-    def getBookingStatus(self, booking_number):
-        '''
-        Returns the status of the booking as a tuple. NEEDS TESTING!!
-        '''
-        booking = self.get(booking=booking_number)
-        return ('booking.status_code', 
-                booking.checked_in,
-                booking.checked_out,
-                booking.payed)
-        
-    def getBikeBooking(self, booking_number):
-        booking = self.get(booking=booking_number)
-        return booking.booked_bike
-    
-    def getLunchBooking(self, booking_number):
-        booking = self.get(booking=booking_number)
-        return booking.booked_lunches
-    
-    '''
-    SETTERS
-    
-    Use to create bookings of e.g., bikes underneath a booking.
-    '''
-    def setBikeBooking(self, type, amount, start_date, duration):
-        booking_dates = create_date_list(start_date, duration)
-        
-        # check if there are enough available bikes for the dates
-        available_bike_list = []
-        for bike in Bike.objects.filter(attribute=type):
-            # Check in order if the bikes are available during the dates
-            available = BikeAvailable.objects.bike_for_dates(bike, booking_dates)
-            
-            # If the bike is available, add it to the bike list.
-            if available:
-                available_bike_list.append(bike)
-                
-            # If there are enough bikes
-            if len(available_bike_list) == amount: 
-                # Initiate bike booking
-                bike_booking = self.booked_bike.create(start_date, end_date)
-        
-                bike_booking.set_bikes()
-                '''
-                
-                '''
-                return True, bike_booking
-            
-        return False, available_bike_list
-    
-    def setBikeExtraBooking(self, **kwargs):
-        pass
-    
-    def setLunchBooking(self, **kwargs):
-        pass
-    
-    def setAccomodationBooking(self, **kwargs):
-        pass
-    
-
 # Booking models
 class Booking(models.Model):
     # Guest
@@ -535,8 +468,82 @@ class Booking(models.Model):
         self.total = listSum(priceList)
         super(Booking, self).save(*args, **kwargs)
         
-        # create function that gathers all related bookings and calculates
+        # create method that gathers all related bookings and calculates
         # the total price from their subtotals.
+        
+    # Methods to update specific parts of booking instances
+    def check_in_booking(self):
+        '''
+        Check in guest. NEED TESTING
+        '''
+        self.checked_in = True
+    
+    def check_out_booking(self):
+        '''
+        Check out guest. NEED TESTING
+        '''
+        self.checked_out = True
+    
+    # Getters
+    def getBookingStatus(self):
+        '''
+        Returns the status of the booking as a tuple. NEEDS TESTING!!
+        '''
+        return ('self.status', 
+                self.checked_in,
+                self.checked_out,
+                self.payed)
+        
+    def getBikeBooking(self):
+        return self.booked_bike
+    
+    def getLunchBooking(self):
+        return self.booked_lunches
+        
+    # Setters
+    def setBikeBooking(self, attr, amount, start_date, duration):
+        '''
+        Checks if there are enough available bikes for the given dates.
+        If there are enough bikes available, it will return True and a
+        list of the bikes that are booked. Otherwise return False and a
+        list of the available bikes it found. 
+        '''
+        booking_dates = create_date_list(start_date, duration.days)
+        
+        # check if there are enough available bikes for the dates
+        available_bike_list = []
+        print('before for-loop')
+        print(attr)
+        for bike in Bike.objects.filter(attribute=attr):
+            print(bike)
+            # Check in order if the bikes are available during the dates
+            available, date_list = BikeAvailable.objects.bike_for_dates(bike, booking_dates)
+            
+            # If the bike is available, add it to the bike list.
+            if available:
+                available_bike_list.append(bike)
+            
+            print(available, available_bike_list)  
+            # If there are enough bikes
+            if len(available_bike_list) == amount: 
+                # Initiate bike booking
+                bike_booking = self.booked_bike.create(start_date, end_date)
+        
+                bike_booking.setBikes(available_bike_list, booking_dates)
+
+                return True, bike_booking
+            
+        return False, available_bike_list
+
+    def setBikeExtraBooking(self, **kwargs):
+        pass
+    
+    def setLunchBooking(self, **kwargs):
+        pass
+    
+    def setAccomodationBooking(self, **kwargs):
+        pass
+    
         
 class BikesBooking(models.Model):
     # Dates and time
@@ -582,6 +589,11 @@ class BikesBooking(models.Model):
             
         [BikeAvailable.objects.book_bike(
             bike=self.bike, date=date, booking=self) for date in date_list]
+        
+    def setBikes(self, bike_list, date_list):
+         for bike in bike_list:
+             for date in date_list:
+                 self.availableBike.book_bike(bike, self.booking, date)
         
     '''
     TODO:
@@ -727,11 +739,12 @@ class BikeAvailableManager(models.Manager):
     def destroy_available_bike(self, bike, date):
         self.get(bike=bike, available_date=date).delete()
     
+    
     def bike_for_dates(bike, dates):
         '''
-        Function that takes one bike and a list of dates as arguments. 
-        Returns true if the bike is available during that day, otherwise returns
-        false
+        Method that takes one bike and a list of dates as arguments. 
+        Returns true if the bike is available for all dates, otherwise returns
+        false.
         '''
         for date in dates:
             try:
@@ -741,8 +754,11 @@ class BikeAvailableManager(models.Manager):
                 return False
             
         return True
-                
-    def get_bikes_for_day(self, day):
+            
+    def get_all_bikes_for_day(self, day):
+        '''
+        Returns all bikes that are available for a given day
+        '''
         return super(BikeAvailableManager, self).get_queryset().filter(
             Q(available_date=day) & Q(available=True))
         

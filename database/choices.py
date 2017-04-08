@@ -16,8 +16,10 @@ Bike_Extra_Choices =[
         ]
 
 Bike_Attribute_Choices = [
-    ('vuxen', 'vuxen'),
-    ('barn', 'barn'),
+    ('adult', 'vuxen'),
+    ('young', 'ungdom'),
+    ('child', 'barn'),
+    ('smallChild', 'småbarn'),
     ]
 
 Bike_Wheelsize_Choices = [

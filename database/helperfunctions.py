@@ -3,7 +3,7 @@ Created on 1 jan. 2017
 
 @author: Adrian
 '''
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 
 # For summing up e.g., the price in a booking

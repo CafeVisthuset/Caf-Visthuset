@@ -40,28 +40,57 @@ class GuestUserSerializer(serializers.ModelSerializer):
 
 class BikeBookingSerializer(serializers.Serializer):
     # Dates and time
-    start_date = serializers.DateField(required=True)
-    duration = serializers.ChoiceField(required=True, choices= Day_Choices)
+    start_date = serializers.DateField(required=True,
+                                       label = 'Startdatum',
+                                       help_text = 'Vilket datum vill du starta?')
+    duration = serializers.ChoiceField(required=True,
+                                       choices= Day_Choices,
+                                       label='Antal dagar',
+                                       help_text='Hur många dagar vill du hyra cykel?')
     
     # Bikes and extras
-    adult_bikes = serializers.ChoiceField(choices=choicegen(0, 10))
-    child_bikes = serializers.ChoiceField(choices=choicegen(0,2))
-    extras = serializers.MultipleChoiceField(choices=BikeExtra.objects.all())
+    adult_bikes = serializers.ChoiceField(choices=choicegen(0, 10),
+                                          label = 'Antal Vuxna',
+                                          help_text = 'Hur många vuxencyklar vill du hyra?'
+                                          )
+    young_bikes = serializers.ChoiceField(choices=choicegen(0, 5),
+                                          label= 'Antal ungdom (12-16 år)')
+    child_bikes = serializers.ChoiceField(choices=choicegen(0,5),
+                                          label='Antal barn (9-12 år)')
+    small_child_bikes = serializers.ChoiceField(choices=choicegen(0,5),
+                                                label='Antal barn (7-9 år)')
+    extras = serializers.MultipleChoiceField(choices=BikeExtra.objects.all(),
+                                             label='Cykeltillbehör')
     
     # Lunches
-    vegetarian_lunches = serializers.IntegerField(required=False, validators=[positive_integer])
-    meat_lunches = serializers.IntegerField(required=False, validators=[positive_integer])
-    fish_lunches = serializers.IntegerField(required=False, validators=[positive_integer])
+    vegetarian_lunches = serializers.IntegerField(required=False,
+                                                  validators=[positive_integer],
+                                                  label='Lunch - Vegetarisk')
+    meat_lunches = serializers.IntegerField(required=False,
+                                            validators=[positive_integer],
+                                            label='Lunch - Kallskuret')
+    fish_lunches = serializers.IntegerField(required=False,
+                                            validators=[positive_integer],
+                                            label='Lunch - Vätternröding')
     
     # Guest info
-    first_name = serializers.CharField(max_length=25)
-    last_name = serializers.CharField(max_length=25)
-    phone_number = serializers.CharField(max_length=25, required=False)
-    email = serializers.EmailField()
+    first_name = serializers.CharField(max_length=25,
+                                       label='Förnamn')
+    last_name = serializers.CharField(max_length=25,
+                                      label='Efternamn')
+    phone_number = serializers.CharField(max_length=25,
+                                         required=False,
+                                         label='Telefonnummer')
+    email = serializers.EmailField(label='Epost')
     newsletter = serializers.BooleanField(
         default=True,
-        help_text= 'Vill du ha nyheter och erbjudanden från oss?')
+        label='Nyhetsbrev',
+        help_text= 'Vill du ha nyheter och erbjudanden från oss?'
+        )
     
     # Extra message
-    other = serializers.CharField(required=False, max_length=200)
-    
+    other = serializers.CharField(required=False,
+                                  max_length=200,
+                                  label='Övrig information/önskemål',
+                                  style={'base_template': 'textarea.html', 'rows': 10,
+                                         'placeholder': 'Övrig info du vill ge oss t ex allergier ...'})

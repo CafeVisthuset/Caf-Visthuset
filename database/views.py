@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, render_to_response
 from django.http.response import HttpResponse, HttpResponseRedirect
 from .models import Booking, Bike, LunchBooking, calc_booking_no
 from .forms import CreateAvailableBikeForm
@@ -125,6 +125,7 @@ class BikeBookingResponse(APIView):
     More docs...
     '''
     renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'bookings/booking.html'
     
     def get(self, request):
         '''
@@ -135,7 +136,9 @@ class BikeBookingResponse(APIView):
             'start_date': date.today(),
             'duration': timedelta(days=1),
             'adult_bikes': 2,
+            'young_bikes': 0,
             'child_bikes': 0,
+            'small_child_bikes': 0,
             'extras': BikeExtra.objects.all(),
             'vegetarian_lunches': 0,
             'meat_lunches': 0,
@@ -147,7 +150,7 @@ class BikeBookingResponse(APIView):
             'other': '',
             }
         serializer = BikeBookingSerializer(initial)
-        return Response({'serializer': serializer}, template_name='bookings/booking.html')
+        return Response({'serializer': serializer})
     
     def post(self, request):
         '''
@@ -156,9 +159,8 @@ class BikeBookingResponse(APIView):
         '''
         serializer = BikeBookingSerializer(data=request.data)
         if serializer.is_valid():
-            print(serializer.data)
             # Structure incoming data
-            #Guest data
+            # Guest data
             first_name = setInput(serializer, 'first_name')
             last_name= setInput(serializer, 'last_name')
             email = setInput(serializer, 'email')
@@ -171,13 +173,20 @@ class BikeBookingResponse(APIView):
             
             # Bike information
             adult_bikes = setInput(serializer, 'adult_bikes')
+            young_bikes = setInput(serializer, 'young_bikes')
             child_bikes = setInput(serializer, 'child_bikes')
+            small_child_bikes = setInput(serializer, 'small_child')
             extras = setInput(serializer, 'extras')
+            
+            bikes = {'adult': adult_bikes, 'young': young_bikes, 'child': child_bikes,
+                    'smallChild': small_child_bikes}
             
             # Lunch information
             veg = setInput(serializer, 'vegetarian_lunches')
             meat = setInput(serializer, 'meat_lunches')
             fish = setInput(serializer, 'fish_lunches')
+            
+            lunches = {'vegetarian': veg, 'fish': fish, 'meat': meat}
             
             # Other booking info
             other = setInput(serializer, 'other')
@@ -186,82 +195,85 @@ class BikeBookingResponse(APIView):
             guest = Guest.objects.post_get_or_create(first_name, last_name, email,
                 kwargs={'phone_number': phone_number, 'newsletter': newsletter})
             
-            print(guest)
             # Create booking
             end_date = start_date + duration - timedelta(days=1)
             number_of_guests = adult_bikes + child_bikes
-            
-            booking = Booking.book.create_booking(guest=guest,
-                                             start_date=start_date,
-                                             end_date=end_date,
-                                             numberOfGuests=number_of_guests, 
-                                             special_requests=other)
-            print(booking, type(booking))
+
+            booking = Booking.book.create_booking(
+                                        guest=guest,
+                                        start_date=start_date,
+                                        end_date=end_date,
+                                        numberOfGuests=number_of_guests, 
+                                        special_requests=other)
+
             # Book bikes
-            included_bikes = {}
-            if adult_bikes != 0:
-                booking.book.setBikeBooking('adult', adult_bikes, start_date, duration)
-                '''
-                found_a, adult_bike_list = BikeAvailable.objects.find_and_book_bikes(
-                    adult_bikes, start_date, duration, booking.booking, 'adult')
-                print(found_a, adult_bike_list)
-                '''
-                included_bikes['Vuxencyklar'] = adult_bikes
+            try:
+                for biketype, amount in bikes.items():
+                    if amount != 0:
+                        success, bike_list = booking.setBikeBooking(
+                            biketype, amount, start_date, duration)
+                        
+                        if not success:
+                            return Response({'serializer': serializer,
+                                             'message': 'Ooops! Något gick snett...'})
+                            
+            except TypeError:
+                # If NoneType is passed, don´t bother
+                pass
             
-            if child_bikes !=0:
-                found_c, child_bike_list = BikeAvailable.objects.find_and_book_bikes(
-                    adult_bikes, start_date, duration, booking.booking, 'child')
-                print(found_c, child_bike_list)
-                included_bikes['Barncyklar'] = child_bikes
-            
-            
-            
-            return 
             # Book extras
-            included_bikes['Tillbehör'] = extras
-            # Book lunches
-            included_lunches = {}
-            if veg != 0 and veg is not None:
-                LunchBooking.objects.create(type=Lunch.objects.get(type='vegetarian'), day=start_date,
-                                            quantity=veg, booking=booking)
-                included_lunches['Vegetarisk'] = veg
             
-            if meat != 0 and meat is not None:
-                LunchBooking.objects.create(type=Lunch.objects.get(type='meat'), day=start_date,
-                                            quantity=meat, booking=booking)
-                included_lunches['Kallskuret'] = meat
-                
-            if fish != 0 and fish is not None:
-                LunchBooking.objects.create(type=Lunch.objects.get(type='fish'), day=start_date,
-                                            quantity=fish, booking=booking)
-                included_lunches['Fisk'] = fish
-                
+            
+            # Book lunches
+            try:
+                for lunchtype, amount in lunches.items():
+                    if amount != 0:
+                        LunchBooking.objects.create(
+                            type=Lunch.objects.get(type=lunchtype), 
+                            day=start_date,
+                            quantity=amount,
+                            booking=booking)
+            except TypeError:
+                # If NoneType is passed, don´t bother
+                pass
             
             # Saves the booking and updates prices
             booking.save()
-             
-            # What to send back to the view
-            message = mark_safe(
-            ''' <h1>Tack {0} för din bokning!</h1><br>
             
-            Du startar den {1} och reser hem igen den {2}. </br>
+            '''
+            Send email to us, telling that there has been a booking.
+            '''
+            # If booking is sucessfull, redirect to the confirmation view.
             
-            I din bokning ingår följande:
-            '''.format(first_name, start_date.strftime('%d %B %Y'), end_date.strftime('%d %B %Y')))
-            
-            return redirect('confirmation', **{'message': message,
-                             'included_lunches': included_lunches,
-                             'included_bikes': included_bikes,
-                             'booking_number': booking.booking},)
-                            #template_name='bookings/confirmation.html'))
+            return redirect('database:confirmation', pk = booking.booking)
         
         # if form is not correctly filled in
-        print(False)
         return Response({'serializer': serializer,
-                         'message': 'Alla fält måste vara korrekt ifyllda!'},
-                        template_name='bookings/booking.html')
+                         'message': 'Alla fält måste vara korrekt ifyllda!'})
         
-def confirmation(request, **kwargs):
-    
-    return render(request, 'bookings/confirmation.html', {'message': kwargs['message']})
-    
+def confirmation_view(request, pk):
+    included = {}
+    booking = Booking.objects.get(booking=pk)
+    first_name = booking.guest.first_name
+    start_date = booking.start_date
+    end_date = booking.end_date
+     
+    if booking.booked_bike is not None:
+        included['bikes'] = booking.booked_bike
+        
+        
+    # What to send back to the view
+    message = mark_safe(
+    ''' <h1>Tack {0} för din bokning!</h1><br>
+                
+    Du startar den {1} och reser hem igen den {2}. </br>
+                
+    I din bokning ingår följande:
+    '''.format(booking.guest.first_name, booking.start_date.strftime('%d %B %Y'), booking.end_date.strftime('%d %B %Y')))
+     
+    return render(request, 'bookings/confirmation.html', {'booking_number': booking,
+                                                          'message': message,
+                                                          'included_bikes': booking.booked_bike,
+                                                          'includes_lunches': booking.booked_lunches,
+                                                          'email': booking.guest.email})
+

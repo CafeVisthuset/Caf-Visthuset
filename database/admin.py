@@ -23,7 +23,7 @@ class BikesAdmin(admin.ModelAdmin):
     form_class = BikesForm
     list_display = ('number', 'attribute', 'wheelsize','rentOutCount', 'damage_report')
     
-    readonly_fields = ['damage_report']
+    readonly_fields = ['damage_report', 'rentOutCount']
     inlines = (DamagesInline, )
     
     actions = ['reset_rent_out_count', ]  
@@ -156,8 +156,9 @@ class BookingsAdmin(admin.ModelAdmin):
                                         'booked_lunch_report']}),
         ]
     list_display = ['booking', 'guest', 'total', 'created_at', 'updated_at','numberOfGuests']
-    readonly_fields = ['created_at', 'updated_at', 'booked_bike_report', 'booked_room_report',
+    readonly_fields = ['booking', 'created_at', 'updated_at', 'booked_bike_report', 'booked_room_report',
                        'booked_lunch_report', 'total']
+    
     
     inlines = [BikesBookingInLine, RoomsBookingInLine, LunchBookingInLine]
     def booked_bike_report(self, instance):

@@ -10,14 +10,14 @@
   <body>
     <nav>{% include 'navbar.html' %}</nav>
 
-    <header>{% block header %}{% endblock %}</header>
+    <header>{% block header %}<h1>Välkommen till Café Visthuset</h1>{% endblock %}</header>
 
     <main style="display: block; width:100%;">
       <section>
       	{% block sidebar %}{% endblock %}
       </section>
       <section>
-        {% block content %}{% endblock %}
+        {% block content %}Här är en liten text om Visthuset{% endblock %}
       </section>
     </main>
 
