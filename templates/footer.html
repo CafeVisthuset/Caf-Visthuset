@@ -1,0 +1,31 @@
+{% load static %}
+<footer class="row">
+	<div class="col-md-12 col-md-3" style="margin-top: 2%;" >
+    	<h3>Kontakta oss!</h3>
+      	<adress>Café Visthuset<br>
+	    Kanalvägen 2, Töreboda<br></adress>
+    	<a href="tel:0506 - 77 75 50"> 0506 - 77 75 50</a><br>
+        <a href="mailto:info@cafevisthuset.se">info@cafevisthuset.se</a><br><br>
+      	<a href="{% url 'visthuset_index' %}">www.cafevisthuset.se</a><br>
+      	<a href="http://www.cyklagotakanal.se">www.cyklagotakanal.se</a>
+    </div>
+    <div class="col-md-12 col-md-3">
+    	<a href="{% url 'api_index' %}">
+       		<img class="img-responsive img-rounded" style="margin-top: 14%; height: 170px;" src="{% static 'img/footer/gk_officiell_partner.jpg' %}"/>
+        </a>
+    </div>
+    <div class="col-md-12 col-md-3">
+    	<a href="/api/">
+        	<img class="img-responsive img-rounded" style="margin-top: 22%; background: white; height: 130px;" src="{% static 'img/footer/vastsverige_svensk.jpg' %}" />
+        </a>
+    </div>
+    <div class="col-md-12 col-md-3" style="margin-top: 4%;" >            
+    	<h3>Öppettider</h3>
+        Vi har öppet juni - augusti samt helger i maj och september.
+            
+        <h3>Samarbeta med oss!</h3>
+        <a href="{% url 'api_index' %}">
+     	<p>Visthusets API</p>
+    	</a>
+    </div>
+ </footer>
