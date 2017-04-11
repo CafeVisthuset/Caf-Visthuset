@@ -4,7 +4,7 @@ from django.http.response import HttpResponse
 
 # Create your views here.
 class IndexView(generic.TemplateView):
-    template_name = 'Visthuset/index.html'
+    template_name = 'visthuset_base.html'
 
 class APIIndexView(generic.TemplateView):
     template_name = 'APIindex.html'

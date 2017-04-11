@@ -499,41 +499,23 @@ class Booking(models.Model):
     
     def getLunchBooking(self):
         return self.booked_lunches
-        
+    
     # Setters
-    def setBikeBooking(self, attr, amount, start_date, duration):
+    def setBikeBooking(self, bike_list, start_date, end_date):
         '''
         Checks if there are enough available bikes for the given dates.
         If there are enough bikes available, it will return True and a
         list of the bikes that are booked. Otherwise return False and a
         list of the available bikes it found. 
         '''
-        booking_dates = create_date_list(start_date, duration.days)
+        bike_booking = self.booked_bike.create(start_date, end_date)
+        bike_booking.setBikes(bike_list)
         
-        # check if there are enough available bikes for the dates
-        available_bike_list = []
-        print('before for-loop')
-        print(attr)
-        for bike in Bike.objects.filter(attribute=attr):
-            print(bike)
-            # Check in order if the bikes are available during the dates
-            available, date_list = BikeAvailable.objects.bike_for_dates(bike, booking_dates)
-            
-            # If the bike is available, add it to the bike list.
-            if available:
-                available_bike_list.append(bike)
-            
-            print(available, available_bike_list)  
-            # If there are enough bikes
-            if len(available_bike_list) == amount: 
-                # Initiate bike booking
-                bike_booking = self.booked_bike.create(start_date, end_date)
+        # If bike_booking is not created
+        if bike_booking == None:
+            return False, None
         
-                bike_booking.setBikes(available_bike_list, booking_dates)
-
-                return True, bike_booking
-            
-        return False, available_bike_list
+        return True, bike_booking
 
     def setBikeExtraBooking(self, **kwargs):
         pass
@@ -597,7 +579,6 @@ class BikesBooking(models.Model):
         
     '''
     TODO:
-    # Lägg till __str__ för bike
     # Lägg in sökning för tillgängliga cyklar
     # Överväg att lägga med datum
     # Bygg modell i ekonomi för priser
@@ -754,10 +735,37 @@ class BikeAvailableManager(models.Manager):
                 return False
             
         return True
+    
+    def get_available_bikes_for_dates(self, attr, amount, start_date, end_date):
+        '''
+        Method that builds a list of the first bikes of a given attribute that
+        are available for all dates from start_date to end_date. Returns True 
+        and the list of available bike objects. If not sufficiently many bikes
+        are found the method returns False and the list of bikes that were found.
+        
+        Used in:
+        BikeBookingResponse(APIView).post
+        
+        '''
+        available_bike_list =[]
+        bikes = Bike.availability.all_for_dates(attr, date_list)
+        # Check in order if the bikes are available during the dates
+        for bike in bikes:
+                
+            # If the bike is available, add it to the bike list.
+            if available:
+                available_bike_list.append(bike)
+                    
+            if len(available_bike_list) == amount:
+                return True, available_bike_list
+        return False, available_bike_list
             
     def get_all_bikes_for_day(self, day):
         '''
         Returns all bikes that are available for a given day
+        
+        Used in:
+        calendar
         '''
         return super(BikeAvailableManager, self).get_queryset().filter(
             Q(available_date=day) & Q(available=True))
@@ -766,6 +774,9 @@ class BikeAvailableManager(models.Manager):
         '''
         Takes one bike object, a booking object and one date as arguments.
         Books the bike and saves it.
+        
+        Used in:
+        BikesBooking.setBikes()
         '''
         bk = self.get(bike=bike, available_date=date)
         bk.available = False
@@ -776,6 +787,9 @@ class BikeAvailableManager(models.Manager):
         '''
         Takes one bike object and one date as arguments.
         Unbooks the bike and saves the changes.
+        
+        Used in:
+        
         '''
         bk = self.get(bike=bike, available_date=date)
         bk.available = True
@@ -786,6 +800,7 @@ class BikeAvailableManager(models.Manager):
 class BikeAvailable(Available):
     bike = models.ForeignKey(
         Bike,
+        related_name='availability',
         on_delete=models.PROTECT,
         blank = True
         )

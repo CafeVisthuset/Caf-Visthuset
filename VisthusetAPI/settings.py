@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'cleaning.apps.CleaningConfig',
     'Economy.apps.EconomyConfig',
     'database.apps.DatabaseConfig',
+    'events.apps.EventsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -145,6 +146,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
+MEDIA_ROOT = os.path.join(os.path.abspath(''), 'static/img/uploads/')
+MEDIA_URL = '/'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = 'staticfiles'

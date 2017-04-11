@@ -16,9 +16,8 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.models import User
 from time import strftime
-from database.helperfunctions import setInput
+from database.helperfunctions import setInput, create_date_list
 from django.urls.base import reverse
-from database.admin import BikesAvail
 
 def index(request):
     latest_booking_list = Booking.objects.order_by('-BookingDate')[:5]
@@ -106,7 +105,7 @@ def create_available_bikes(request):
                    })
 
 
-def BookBikeView(request):
+def book_bike_view(request):
     if request.method == 'POST':
         form = BookingForm(request.POST)
         data = form.cleaned_data
@@ -118,7 +117,7 @@ def BookBikeView(request):
         form = BookingForm
     return render(request, 'bookings/booking.html',{'message': response_data, 'form': form})
 
-class BikeBookingResponse(APIView):
+class BikeBookingResponseView(APIView):
     '''
     View with responses for Bike Booking
     
@@ -170,6 +169,8 @@ class BikeBookingResponse(APIView):
             # Dates and times
             start_date = datetime.strptime(setInput(serializer, 'start_date'), '%Y-%m-%d')
             duration = setInput(serializer, 'duration')
+            end_date = start_date + duration - timedelta(days=1)
+            date_list = create_date_list(start_date, duration.days)
             
             # Bike information
             adult_bikes = setInput(serializer, 'adult_bikes')
@@ -181,6 +182,8 @@ class BikeBookingResponse(APIView):
             bikes = {'adult': adult_bikes, 'young': young_bikes, 'child': child_bikes,
                     'smallChild': small_child_bikes}
             
+            number_of_guests = adult_bikes + child_bikes
+            
             # Lunch information
             veg = setInput(serializer, 'vegetarian_lunches')
             meat = setInput(serializer, 'meat_lunches')
@@ -190,15 +193,24 @@ class BikeBookingResponse(APIView):
             
             # Other booking info
             other = setInput(serializer, 'other')
+            '''
+            # Check availability of bikes
+            bike_list = []
+            for biketype, amount in bikes.items():
+                if amount is not None and amount > 0:
+                    bike_list.append(
+                        BikeAvailable.objects.get_available_bikes_for_dates(self,
+                                                                            biketype,
+                                                                            amount,
+                                                                            start_date,
+                                                                            end_date))
+                
             
             # Get or create guest
             guest = Guest.objects.post_get_or_create(first_name, last_name, email,
                 kwargs={'phone_number': phone_number, 'newsletter': newsletter})
             
             # Create booking
-            end_date = start_date + duration - timedelta(days=1)
-            number_of_guests = adult_bikes + child_bikes
-
             booking = Booking.book.create_booking(
                                         guest=guest,
                                         start_date=start_date,
@@ -207,19 +219,11 @@ class BikeBookingResponse(APIView):
                                         special_requests=other)
 
             # Book bikes
-            try:
-                for biketype, amount in bikes.items():
-                    if amount != 0:
-                        success, bike_list = booking.setBikeBooking(
-                            biketype, amount, start_date, duration)
+            success, bike_booking = booking.setBikeBooking(bike_list, start_date, end_date)
                         
-                        if not success:
-                            return Response({'serializer': serializer,
-                                             'message': 'Ooops! Något gick snett...'})
-                            
-            except TypeError:
-                # If NoneType is passed, don´t bother
-                pass
+            if not success:
+                return Response({'serializer': serializer,
+                                'message': 'Ooops! Något gick snett...'})
             
             # Book extras
             
@@ -239,7 +243,7 @@ class BikeBookingResponse(APIView):
             
             # Saves the booking and updates prices
             booking.save()
-            
+            '''
             '''
             Send email to us, telling that there has been a booking.
             '''

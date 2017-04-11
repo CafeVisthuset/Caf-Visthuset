@@ -1,28 +1,61 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    {% load static %}
-    {% block title %}<title>Välkommen till Cafe Visthuset!</title>{% endblock %}
-    {% include 'stylesheets.html' %}
-  </head>
-  
-  <body>
-    <nav>{% include 'navbar.html' %}</nav>
+	<head>
+    	<meta charset="utf-8">
+    	<meta lang="sv">
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+    	{% block title %}<title>Välkommen till Cafe Visthuset!</title>{% endblock %}
+    	{% include 'stylesheets.html' %}
+	</head>
+	
+	<body class="content">
+		{% block header %}
+		<header class="row">
+        	<div class="col-xs-12 col-md-4"> 
+          		<img class="img-responsive img-rounded" src="{% static 'img/Logga_Visthuset.jpg' %}" />
+        	</div>
+        	<div style="margin-top: 5%;" >
+          		<h1 class="col-md-8">Café Visthuset</h1>
+          		<h3 class="col-md-8">En lummig mötesplats vid Göta kanal</h3>
+        	</div>
+    	</header>
+  	
+  		{% include 'navbar.html' %}
+		{% endblock %}
+	
+    	<main>
+    	{% block content %}
+      		<section class="row">
+				<a href="{% url 'database:bike_booking' %}">
+				<div class="col-md-12 col-md-4 img-hover">
+    				<img class="img-responsive img-rounded" src="{% static 'img/cyklar.jpg' %}" alt="Logga in!" width="100%"/>
+					<h3>Visthusets cykeluthyrning!</h3><br>
+				</div>
+				</a>
+				<a href="{% url 'contact' %}">
+				<div class="col-md-12 col-md-4 img-hover">
+					<img class="img-responsive img-rounded" src="{% static 'img/contact.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
+ 					<h3 top="100%">Kontakta oss!</h3>
+				</div>
+				</a>
+				<a href="{% url 'menu' %}">
+				<div class="col-md-12 col-md-4 img-hover">
+					<img class="img-responsive img-rounded" src="{% static 'img/coffeemaking.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
+ 				<h3 top="100%">Här är vår meny!</h3>
+				</div>
+				</a>
+				<a href="{% url 'events:event' %}">
+				<div class="col-md-12 col-md-4 img-hover">
+					<img class="img-responsive img-rounded" src="{% static 'img/events/Loppisbild_banner.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
+ 					<h3 top="100%">Det händer i Visthuset!</h3>
+				</div>
+		</section>
+		{% endblock %}
+    	</main>
 
-    <header>{% block header %}<h1>Välkommen till Café Visthuset</h1>{% endblock %}</header>
+    	{% include 'footer.html' %}
 
-    <main style="display: block; width:100%;">
-      <section>
-      	{% block sidebar %}{% endblock %}
-      </section>
-      <section>
-        {% block content %}Här är en liten text om Visthuset{% endblock %}
-      </section>
-    </main>
-
-    <footer style="width: 100%; display:block; align: bottom;">{% include 'footer.html' %}</footer>
-
-    {% include 'javascripts.html' %}
-  </body>
+    	{% include 'javascripts.html' %}
+    </body>
 </html>

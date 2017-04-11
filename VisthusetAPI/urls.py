@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^$', IndexView.as_view(), name="visthuset_index"),
     url(r'^menu/$', MenuView.as_view(), name="menu"),
     url(r'^calendar/$', CalendarView.as_view(), name="calendar"),
-    url(r'^events/$', EventsView.as_view(), name="events"),
+    url(r'^events/', include('events.urls')),
     url(r'^about/$', AboutView.as_view(), name="about"),
     url(r'^contact/$', ContactView.as_view(), name="contact"),
     
