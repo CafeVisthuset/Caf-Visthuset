@@ -16,18 +16,14 @@ TODO:
     # Grundläggande modeller som bara håller data (ex. cyklar el. utrustning) 
         görs abstrakta
         - Eventuellt: Skadorna är också en underklass av cyklar
-    # Bokningsmodeller görs som förlängningar av de abstrakta modellerna
-        - cykelbokningar
-        - lunchbokningar
-        - boendebokningar
-        - tillbehörsbokningar (ex cykelkärra)
-    # Gör det möjligt att ange om bokningar är preleminära
     # Gör det möjligt att föra statistik över sålda paket
-    # Lägg in tillgänglighet för cyklar vissa datum
+    # Gör om bokningssystemet till ett mer effektivt och som fungerar genom varje
+        bokningsbar modell istället för genom bokningsmodeller.
+    # Vid avbokningar tas i dagsläget cykeltillgänglighet bort, se till att den bara
+        ändras.
     
 * Gör managers till bokningsmodellerna för att kunna göra sökningar
 * Lägg in modeller för generiska bokningar/eventbokningar
-* Lägg in funktion för att skapa bokningsnummer
 
 '''
 
@@ -501,18 +497,18 @@ class Booking(models.Model):
         return self.booked_lunches
     
     # Setters
-    def setBikeBooking(self, bike_list, start_date, end_date):
+    def setBikeBooking(self, bike_list, start_date, end_date, duration):
         '''
         Checks if there are enough available bikes for the given dates.
         If there are enough bikes available, it will return True and a
         list of the bikes that are booked. Otherwise return False and a
         list of the available bikes it found. 
         '''
-        bike_booking = self.booked_bike.create(start_date, end_date)
-        bike_booking.setBikes(bike_list)
+        bike_booking = self.booked_bike.create(from_date=start_date, to_date=end_date)
+        success = bike_booking.setBikes(bike_list, create_date_list(start_date, duration.days))
         
         # If bike_booking is not created
-        if bike_booking == None:
+        if bike_booking == None or not success:
             return False, None
         
         return True, bike_booking
@@ -564,18 +560,20 @@ class BikesBooking(models.Model):
         price = 200
         self.subtotal = price * (days.days +1)
         super(BikesBooking, self).save(*args, **kwargs)
-        
+        '''
         # Update Available bikes
         numdays = self.to_date.day - self.from_date.day
         date_list = [(self.from_date + timedelta(days=x)) for x in range(0,numdays + 1)]
             
         [BikeAvailable.objects.book_bike(
             bike=self.bike, date=date, booking=self) for date in date_list]
-        
+        '''
     def setBikes(self, bike_list, date_list):
-         for bike in bike_list:
-             for date in date_list:
-                 self.availableBike.book_bike(bike, self.booking, date)
+        for bike in bike_list:
+            for date in date_list:
+                success = self.availableBike.book_bike(self, bike, date)
+                 
+        return success
         
     '''
     TODO:
@@ -721,7 +719,7 @@ class BikeAvailableManager(models.Manager):
         self.get(bike=bike, available_date=date).delete()
     
     
-    def bike_for_dates(bike, dates):
+    def bike_for_dates(self, bike, dates):
         '''
         Method that takes one bike and a list of dates as arguments. 
         Returns true if the bike is available for all dates, otherwise returns
@@ -730,13 +728,12 @@ class BikeAvailableManager(models.Manager):
         for date in dates:
             try:
                 self.get(bike=bike, available_date=date, available=True)
-            
             except:
                 return False
             
         return True
     
-    def get_available_bikes_for_dates(self, attr, amount, start_date, end_date):
+    def get_available_bikes_for_dates(self, attr, amount, start_date, end_date, duration=None):
         '''
         Method that builds a list of the first bikes of a given attribute that
         are available for all dates from start_date to end_date. Returns True 
@@ -747,11 +744,16 @@ class BikeAvailableManager(models.Manager):
         BikeBookingResponse(APIView).post
         
         '''
+        if not duration:
+            duration = end_date - start_date
+        
+        date_list = create_date_list(start_date, duration.days)
+        print(date_list)
         available_bike_list =[]
-        bikes = Bike.availability.all_for_dates(attr, date_list)
+        bikes = Bike.objects.filter(attribute=attr)
         # Check in order if the bikes are available during the dates
         for bike in bikes:
-                
+            available = self.bike_for_dates(bike, date_list)    
             # If the bike is available, add it to the bike list.
             if available:
                 available_bike_list.append(bike)
@@ -770,7 +772,7 @@ class BikeAvailableManager(models.Manager):
         return super(BikeAvailableManager, self).get_queryset().filter(
             Q(available_date=day) & Q(available=True))
         
-    def book_bike(self, bike, booking, date):
+    def book_bike(self, booking, bike, date):
         '''
         Takes one bike object, a booking object and one date as arguments.
         Books the bike and saves it.
@@ -778,11 +780,18 @@ class BikeAvailableManager(models.Manager):
         Used in:
         BikesBooking.setBikes()
         '''
-        bk = self.get(bike=bike, available_date=date)
+        print(booking, type(bike), date.date())
+        try:
+            # Try to find the right BikeAvailable object
+            bk = BikeAvailable.objects.get(bike=bike, available_date=date.date())
+        except ObjectDoesNotExist:
+            # If it does not exist, return False
+            return False
         bk.available = False
         bk.bookings = booking
         bk.save()
-        
+        return True
+    
     def unbook_bike(self, bike, date):
         '''
         Takes one bike object and one date as arguments.
@@ -791,7 +800,7 @@ class BikeAvailableManager(models.Manager):
         Used in:
         
         '''
-        bk = self.get(bike=bike, available_date=date)
+        bk = BikeAvailable.objects.get(bike=bike, available_date=date.date())
         bk.available = True
         bk.bookings = None
         bk.save()
@@ -808,7 +817,7 @@ class BikeAvailable(Available):
     bookings = models.ForeignKey(
         BikesBooking,
         related_name='availableBike',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         blank = True,
         null = True
         )

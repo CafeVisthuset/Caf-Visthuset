@@ -193,24 +193,40 @@ class BikeBookingResponseView(APIView):
             
             # Other booking info
             other = setInput(serializer, 'other')
-            '''
+            
             # Check availability of bikes
+            
+            biketype_dict = {'adult': 'vuxencykel', 'young': 'ungdomscykel', 'child': 'barncykel',
+                    'smallChild': 'småbarncykel'}
+            
             bike_list = []
             for biketype, amount in bikes.items():
                 if amount is not None and amount > 0:
-                    bike_list.append(
-                        BikeAvailable.objects.get_available_bikes_for_dates(self,
-                                                                            biketype,
-                                                                            amount,
-                                                                            start_date,
-                                                                            end_date))
+                    success, list = (BikeAvailable.objects.
+                                            get_available_bikes_for_dates(biketype,
+                                                                          amount,
+                                                                          start_date,
+                                                                          end_date,
+                                                                          duration))
+                    if success:
+                        bike_list += list
+                    else:
+                        return Response({'serializer': serializer,
+                                         'message': mark_safe('''
+                                         Det verkar som att vi inte har tillräckligt många {} lediga<br>
+                                         för en eller flera av de önskade dagarna. Ring oss gärna på<br>
+                                         0506 - 77 75 50 eller skicka ett mejl till <a href="mailto:info@cafevisthuset.se">
+                                         info@cafevisthuset.se</a>.
+                                         '''.format(biketype_dict[biketype]))})
+                    
                 
-            
+            print(bike_list)
             # Get or create guest
             guest = Guest.objects.post_get_or_create(first_name, last_name, email,
                 kwargs={'phone_number': phone_number, 'newsletter': newsletter})
             
             # Create booking
+            '''
             booking = Booking.book.create_booking(
                                         guest=guest,
                                         start_date=start_date,
@@ -219,31 +235,27 @@ class BikeBookingResponseView(APIView):
                                         special_requests=other)
 
             # Book bikes
-            success, bike_booking = booking.setBikeBooking(bike_list, start_date, end_date)
-                        
+            success, bike_booking = booking.setBikeBooking(bike_list, start_date, end_date, duration)
+            '''
+            success = False           
             if not success:
-                return Response({'serializer': serializer,
-                                'message': 'Ooops! Något gick snett...'})
+                return render(request, 'failed.html')
             
             # Book extras
             
             
             # Book lunches
-            try:
-                for lunchtype, amount in lunches.items():
-                    if amount != 0:
-                        LunchBooking.objects.create(
+            for lunchtype, amount in lunches.items():
+                if amount and amount > 0:
+                    LunchBooking.objects.create(
                             type=Lunch.objects.get(type=lunchtype), 
                             day=start_date,
                             quantity=amount,
                             booking=booking)
-            except TypeError:
-                # If NoneType is passed, don´t bother
-                pass
             
             # Saves the booking and updates prices
             booking.save()
-            '''
+            
             '''
             Send email to us, telling that there has been a booking.
             '''
