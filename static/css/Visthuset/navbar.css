@@ -1,24 +1,20 @@
-header {
-	background-color: lightblue;
-  padding: 20px;
-  }	
 .navbar-default {
-  background-color: #FFFFFF;
+  background-color: lightblue;
   background-image: none;
   background-repeat: no-repeat;
   margin: 10px;
-  border: 1px solid darkgray;
-  border-radius: 5px;
+  margin-bottom: 0px;
   font-size: 1.5em;
   }
+  
 .navbar-default button {
-  border: none;
+  border:none;
   }
 
 .navbar-default button:hover {
-    background-color: #FFFFFF;
+    background-color: lightblue;
   }
+
 .navbar-brand {
     font-size: 1.0em;
   }
-/* old colorcode #434434 */

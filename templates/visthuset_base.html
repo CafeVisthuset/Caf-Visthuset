@@ -7,46 +7,99 @@
     	<meta name="viewport" content="width=device-width, initial-scale=1">
     	{% block title %}<title>Välkommen till Cafe Visthuset!</title>{% endblock %}
     	{% include 'stylesheets.html' %}
+    	{% include 'javascripts.html' %}
 	</head>
 	
-	<body class="content">
+	<body class="container-fluid">
 		{% block header %}
-		<header class="row">
-        	<div class="col-xs-12 col-md-4"> 
-          		<img class="img-responsive img-rounded" src="{% static 'img/Logga_Visthuset.jpg' %}" />
-        	</div>
-        	<div style="margin-top: 5%;" >
-          		<h1 class="col-md-8">Café Visthuset</h1>
-          		<h3 class="col-md-8">En lummig mötesplats vid Göta kanal</h3>
-        	</div>
-    	</header>
-  	
+		<header>
+			<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+				<!-- Indicators -->
+				<ol class="carousel-indicators">
+					<li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+					<li data-target="#carousel-example-generic" data-slide-to="1"></li>
+					<li data-target="#carousel-example-generic" data-slide-to="2"></li>
+				</ol>
+					
+				<!-- Wrapper for slides -->
+				<div class="carousel-inner" role="listbox">
+					<div class="item active">
+						<a href="{% url 'database:bike_booking' %}">
+						    <img src="{% static 'img/IMGP2046.jpg' %}" alt="...">
+						    <div class="carousel-caption">
+						        <div style="margin-top: 5%;" >
+				          			<h1>Café Visthuset</h1>
+				          			<h3>Glass vid Göta kanal!</h3>
+				        		</div>
+							</div>
+						</a>
+					</div>
+					<div class="item">
+						<a href="{% url 'database:bike_booking' %}">
+						    <img src="{% static 'img/IMGP2046.jpg' %}" alt="...">
+						    <div class="carousel-caption">
+						        <h1>Café Visthuset</h1>
+				          		<h3>Hyr en cykel vid Göta kanal!</h3>
+						    </div>
+						 </a>
+					</div>
+					<div class="item">
+						<a href="{% url 'database:bike_booking' %}">
+						    <img src="{% static '/img/IMGP2046.jpg' %}" alt="...">
+						    <div class="carousel-caption">
+						        <h1>Café Visthuset</h1>
+				          		<h3>En lummig mötesplats vid Göta kanal</h3>
+						    </div>
+						 </a>
+					</div>
+					    
+				</div>
+					
+				<!-- Controls -->
+				<a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+					<span class="sr-only">Previous</span>
+				</a>
+				<a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+					<span class="sr-only">Next</span>
+				</a>
+			</div>
+			<div class="row">
+	        	<div class="col-md-12 col-md-12"> 
+	        		
+	        	</div>
+	        	
+	    	</div>
   		{% include 'navbar.html' %}
+  		
+
+  		</header>
 		{% endblock %}
 	
     	<main>
     	{% block content %}
       		<section class="row">
 				<a href="{% url 'database:bike_booking' %}">
-				<div class="col-md-12 col-md-4 img-hover">
+				<div class="col-xs-12 col-md-4 img-hover">
     				<img class="img-responsive img-rounded" src="{% static 'img/cyklar.jpg' %}" alt="Logga in!" width="100%"/>
 					<h3>Visthusets cykeluthyrning!</h3><br>
 				</div>
 				</a>
 				<a href="{% url 'contact' %}">
-				<div class="col-md-12 col-md-4 img-hover">
+				<div class="col-xs-12 col-md-4 img-hover">
 					<img class="img-responsive img-rounded" src="{% static 'img/contact.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
  					<h3 top="100%">Kontakta oss!</h3>
 				</div>
 				</a>
 				<a href="{% url 'menu' %}">
-				<div class="col-md-12 col-md-4 img-hover">
+				<div class="col-xs-12 col-md-4 img-hover">
 					<img class="img-responsive img-rounded" src="{% static 'img/coffeemaking.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
  				<h3 top="100%">Här är vår meny!</h3>
 				</div>
 				</a>
 				<a href="{% url 'events:event' %}">
-				<div class="col-md-12 col-md-4 img-hover">
+				<div class="col-xs-12 col-md-4 img-hover">
 					<img class="img-responsive img-rounded" src="{% static 'img/events/Loppisbild_banner.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
  					<h3 top="100%">Det händer i Visthuset!</h3>
 				</div>
@@ -55,7 +108,5 @@
     	</main>
 
     	{% include 'footer.html' %}
-
-    	{% include 'javascripts.html' %}
     </body>
 </html>
