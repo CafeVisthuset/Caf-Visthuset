@@ -226,7 +226,7 @@ class BikeBookingResponseView(APIView):
                 kwargs={'phone_number': phone_number, 'newsletter': newsletter})
             
             # Create booking
-            '''
+
             booking = Booking.book.create_booking(
                                         guest=guest,
                                         start_date=start_date,
@@ -236,8 +236,7 @@ class BikeBookingResponseView(APIView):
 
             # Book bikes
             success, bike_booking = booking.setBikeBooking(bike_list, start_date, end_date, duration)
-            '''
-            success = False           
+        
             if not success:
                 return render(request, 'failed.html')
             
