@@ -12,7 +12,7 @@
 	
 	<body class="container-fluid">
 		{% block header %}
-		<header>
+		<header class="row">
 			<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
 				<!-- Indicators -->
 				<ol class="carousel-indicators">
@@ -23,36 +23,36 @@
 					
 				<!-- Wrapper for slides -->
 				<div class="carousel-inner" role="listbox">
+				
 					<div class="item active">
-						<a href="{% url 'database:bike_booking' %}">
-						    <img src="{% static 'img/IMGP2046.jpg' %}" alt="...">
-						    <div class="carousel-caption">
-						        <div style="margin-top: 5%;" >
-				          			<h1>Café Visthuset</h1>
-				          			<h3>Glass vid Göta kanal!</h3>
-				        		</div>
-							</div>
-						</a>
-					</div>
-					<div class="item">
-						<a href="{% url 'database:bike_booking' %}">
-						    <img src="{% static 'img/IMGP2046.jpg' %}" alt="...">
-						    <div class="carousel-caption">
-						        <h1>Café Visthuset</h1>
-				          		<h3>Hyr en cykel vid Göta kanal!</h3>
-						    </div>
-						 </a>
-					</div>
-					<div class="item">
-						<a href="{% url 'database:bike_booking' %}">
-						    <img src="{% static '/img/IMGP2046.jpg' %}" alt="...">
+						<a href="{% url 'visthuset_index' %}">
+						    <img src="{% static '/img/Visthuset_presentation3.jpg' %}" alt="...">
 						    <div class="carousel-caption">
 						        <h1>Café Visthuset</h1>
 				          		<h3>En lummig mötesplats vid Göta kanal</h3>
 						    </div>
 						 </a>
 					</div>
-					    
+					<div class="item">
+						<a href="{% url 'menu' %}">
+						    <img src="{% static 'img/Glassbild3.jpg' %}" alt="...">
+						    <div class="carousel-caption">
+						        <h1>Café Visthuset</h1>
+				          		<h3>Glass vid Göta kanal!</h3>
+						    </div>
+						 </a>
+					</div>
+					<div class="item">
+						<a href="{% url 'database:bike_booking' %}">
+						    <img src="{% static 'img/IMGP2046.jpg' %}" alt="...">
+						    <div class="carousel-caption">
+						        <div style="margin-top: 5%;" >
+				          			<h1>Café Visthuset</h1>
+				          			<h3>Hyr en cykel vid Göta kanal!</h3>
+				        		</div>
+							</div>
+						</a>
+					</div>			    
 				</div>
 					
 				<!-- Controls -->
@@ -87,22 +87,27 @@
 				</div>
 				</a>
 				<a href="{% url 'contact' %}">
-				<div class="col-xs-12 col-md-4 img-hover">
-					<img class="img-responsive img-rounded" src="{% static 'img/contact.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
- 					<h3 top="100%">Kontakta oss!</h3>
-				</div>
+					<div class="col-xs-12 col-md-4 img-hover">
+						<img class="img-responsive img-rounded" src="{% static 'img/contact.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
+	 					<h3 top="100%">Kontakta oss!</h3>
+					</div>
 				</a>
 				<a href="{% url 'menu' %}">
-				<div class="col-xs-12 col-md-4 img-hover">
-					<img class="img-responsive img-rounded" src="{% static 'img/coffeemaking.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
- 				<h3 top="100%">Här är vår meny!</h3>
-				</div>
+					<div class="col-xs-12 col-md-4 img-hover">
+						<img class="img-responsive img-rounded" src="{% static 'img/coffeemaking.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
+	 				<h3 top="100%">Här är vår meny!</h3>
+					</div>
 				</a>
+				{% for event in events %}
 				<a href="{% url 'events:event' %}">
-				<div class="col-xs-12 col-md-4 img-hover">
-					<img class="img-responsive img-rounded" src="{% static 'img/events/Loppisbild_banner.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
- 					<h3 top="100%">Det händer i Visthuset!</h3>
-				</div>
+					<div class="col-sm-12 col-md-4 img-hover">
+						
+				    	<img class="img-responsive img-rounded" src="{{ event.image.url }}" alt="{{ event.imageAlt }}" width="100%"/>
+						<h3 top="100%">{{ event.title }}</h3>
+						<p>{{ event.description | safe}}</p><br>
+					</div>
+				</a>
+			{% endfor %}
 		</section>
 		{% endblock %}
     	</main>

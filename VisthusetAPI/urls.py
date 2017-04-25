@@ -19,6 +19,7 @@ from VisthusetAPI.views import *
 from rest_framework import routers
 from Economy.views import UserViewSet
 import database.views as booking
+import VisthusetAPI
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
@@ -27,7 +28,7 @@ router.register(r'users', UserViewSet)
 
 urlpatterns = [
     # Visthuset urls
-    url(r'^$', IndexView.as_view(), name="visthuset_index"),
+    url(r'^$', IndexView, name="visthuset_index"),
     url(r'^menu/$', MenuView.as_view(), name="menu"),
     url(r'^calendar/$', CalendarView.as_view(), name="calendar"),
     url(r'^events/', include('events.urls')),
