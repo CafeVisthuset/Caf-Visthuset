@@ -144,7 +144,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
-MEDIA_ROOT = os.path.join(os.path.abspath(''), 'static/img/uploads/')
+
+MEDIA_ROOT = 'VisthusetAPI-adrian/'
 MEDIA_URL = '/'
 
 STATIC_URL = '/static/'

@@ -1,13 +1,12 @@
-import os
 from django.db import models
-from datetime import datetime
 
 # Create your models here.
 class Event(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=500)
     text = models.TextField(max_length=2000)
-    image = models.ImageField(upload_to=os.path.join(os.path.abspath(''), 'static/img/uploads/'))
+    image = models.ImageField(upload_to='static/img/uploads/')
+    #image = models.ImageField(upload_to=os.path.join(os.path.abspath(''), 'static/img/uploads/'))
     imageAlt = models.CharField(max_length=30, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
