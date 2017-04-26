@@ -85,7 +85,7 @@ class DeliveryAdmin(admin.ModelAdmin):
 class AllergenAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields':['name']}),
-        ('Beskrivning',     {'fields':['describtion', 'hazard']}),
+        ('Beskrivning',     {'fields':['description', 'hazard']}),
         ]
     list_display = ['name']
     
