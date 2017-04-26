@@ -1,6 +1,7 @@
 from django.db import models
-from datetime import date
+from datetime import date, datetime
 from Economy.models import Employee
+from cleaning.choices import Weekday_Choices
 
 """
 TODO:
@@ -23,6 +24,33 @@ TODO:
 * Lägg in beställningsrutiner och telefonnumer, eventuellt som en flatpage
 * Lägg in schema för personalen 
 """
+class Allergen(models.Model):
+    name = models.CharField(max_length=30)
+    description = models.TextField(max_length=200, blank=True)
+    hazard = models.TextField(max_length=200, blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=50)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField(blank=True)
+    contact = models.CharField(max_length=30, verbose_name='kontaktperson')
+    order_day = models.CharField(max_length=15, choices=Weekday_Choices, help_text='Veckodag för beställning')
+    
+    description = models.TextField(max_length=200, blank=True)
+    goods = models.TextField(max_length=100, blank=True)
+    
+    other = models.TextField(max_length=200, blank=True)
+    
+    class Meta:
+        verbose_name='leverantör'
+        verbose_name_plural='leverantörer'
+
+    def __str__(self):
+        return self.name
+    
 # Model to store info on Freezers
 class Freezer(models.Model):
     type = models.CharField(max_length = 50, verbose_name='Typ av frys')
@@ -143,3 +171,94 @@ class Floor(Clean):
         verbose_name = 'Golv'
         verbose_name_plural = 'Golven'
         
+class Delivery(models.Model):
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.PROTECT,
+        null=True,
+        )
+    date = models.DateField(default=datetime.today)
+    damaged = models.BooleanField(default=False)
+    expired = models.BooleanField(default=False)
+    anomaly = models.BooleanField(default=False)
+    
+    signature = models.ForeignKey(
+        Employee,
+        on_delete=models.PROTECT,
+        null = True
+        )
+    
+    class Meta:
+        verbose_name = 'leverans'
+        verbose_name_plural = 'leveranser'
+        ordering = ['date']
+    
+    def __str__(self):
+        return '{}, {}'.format(self.supplier, self.date)
+      
+    def set_anomaly(self):
+        if self.damaged or self.expired:
+            self.anomaly = True
+        self.save()
+        
+###############################################################################
+
+class Ingredience(models.Model):
+    name = models.CharField(max_length=30)
+    price = models.DecimalField(max_digits=6, decimal_places=2,
+                                help_text='Pris/kg eller pris/l')
+    package_size = models.CharField(max_length=30, blank=True, 
+                    help_text='storlek på paket, om standard. Ex. 25 kg säck')
+    allergen = models.ManyToManyField(
+        Allergen,
+        )
+    
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.PROTECT,
+        blank=True
+        )
+    
+    class Meta:
+        verbose_name = 'ingrediens'
+        verbose_name_plural = 'ingredienser'
+        
+    def __str__(self):
+        return self.name
+
+class RecepieIngredience(models.Model):
+    ingredience = models.ForeignKey(
+        Ingredience,
+        on_delete=models.PROTECT,
+        )
+    amount = models.DecimalField(max_digits=5, decimal_places=2)
+    recepie = models.ForeignKey(
+        'Recepie',
+        on_delete=models.PROTECT,
+        blank= True,
+        null=True
+        )
+    
+    def __str__(self):
+        return self.ingredience.name
+    
+class Recepie(models.Model):
+    name = models.CharField(max_length=50)
+    pieces = models.IntegerField(help_text='Antal per sats')
+    customer_price = models.DecimalField(max_digits=5, decimal_places=2)
+    retailer_price = models.DecimalField(max_digits=5, decimal_places=2)
+    work_hours = models.DurationField(help_text='Arbetsinsats för en sats')
+    oven_time = models.DurationField(help_text='Tid i ugnen')
+    
+    description = models.TextField(max_length=1000, help_text='Hur gör man?')
+    
+    added = models.TimeField(auto_now_add=True)
+    updated = models.TimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'recept'
+        verbose_name_plural = 'recept'
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name    
