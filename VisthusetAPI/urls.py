@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^events/', include('events.urls')),
     url(r'^about/$', AboutView.as_view(), name="about"),
     url(r'^contact/$', ContactView.as_view(), name="contact"),
+    url(r'^ckeditor/', include('ckeditor_uploader.urls')),
     
     # API urls
     url(r'^api/$', APIIndexView.as_view(), name="api_index"),

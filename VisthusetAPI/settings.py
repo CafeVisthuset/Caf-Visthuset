@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.flatpages',
     'rest_framework',
+    'ckeditor',
 ]
 
 SITE_ID = 1
@@ -147,6 +148,8 @@ USE_TZ = True
 
 MEDIA_ROOT = 'VisthusetAPI-adrian/'
 MEDIA_URL = '/'
+
+CKEDITOR_UPLOAD_PATH = "static/img/uploads/"
 
 STATIC_URL = '/static/'
 STATIC_ROOT = 'staticfiles'
