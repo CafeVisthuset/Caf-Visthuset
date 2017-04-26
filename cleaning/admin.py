@@ -76,7 +76,7 @@ class FreezerControl(admin.ModelAdmin):
 class DeliveryAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields': ['supplier', 'date']}),
-        ('Genomgång',       {'fields': ['damaged', 'expired']})
+        ('Genomgång',       {'fields': ['damaged', 'expired']}),
         ('Signering',       {'fields': ['signature']}),
         ]
     list_display = ['supplier', 'date', 'anomaly', 'signature']
@@ -95,9 +95,10 @@ class IngredienceAdmin(admin.ModelAdmin):
         (None,              {'fields': ['name', 'price', 'package_size']}),
         ('övrigt',          {'fields': ['allergen', 'supplier']}),
         ]
-    list_display = ['name', 'supplier', 'allergen']
+    list_display = ['name', 'supplier']
     
 class IngredienceInline(admin.TabularInline):
+    model = RecepieIngredience
     fields = ['ingredience', 'amount']
     
 @admin.register(Recepie)
@@ -108,6 +109,6 @@ class RecepieAdmin(admin.ModelAdmin):
                                         'work_hours']}),
                  
         ]
-    inlines = ['IngredienceInline']
-    list_display = ['name', 'price', 'pieces', 'work_hours']
+    inlines = [IngredienceInline]
+    list_display = ['name', 'customer_price', 'retailer_price', 'pieces', 'work_hours']
     

@@ -207,13 +207,10 @@ class Ingredience(models.Model):
     name = models.CharField(max_length=30)
     price = models.DecimalField(max_digits=6, decimal_places=2,
                                 help_text='Pris/kg eller pris/l')
-    package_size = models.CharField(max_lenght=30, blank=True, 
+    package_size = models.CharField(max_length=30, blank=True, 
                     help_text='storlek på paket, om standard. Ex. 25 kg säck')
     allergen = models.ManyToManyField(
         Allergen,
-        on_delete=models.PROTECT,
-        null = True,
-        blank = True
         )
     
     supplier = models.ForeignKey(
@@ -235,24 +232,25 @@ class RecepieIngredience(models.Model):
         on_delete=models.PROTECT,
         )
     amount = models.DecimalField(max_digits=5, decimal_places=2)
+    recepie = models.ForeignKey(
+        'Recepie',
+        on_delete=models.PROTECT,
+        blank= True,
+        null=True
+        )
     
     def __str__(self):
         return self.ingredience.name
     
 class Recepie(models.Model):
     name = models.CharField(max_length=50)
-    ingredience = models.ForeignKey(
-        RecepieIngredience,
-        on_delete=models.PROTECT,
-        blank = True,
-        )
     pieces = models.IntegerField(help_text='Antal per sats')
     customer_price = models.DecimalField(max_digits=5, decimal_places=2)
     retailer_price = models.DecimalField(max_digits=5, decimal_places=2)
     work_hours = models.DurationField(help_text='Arbetsinsats för en sats')
     oven_time = models.DurationField(help_text='Tid i ugnen')
     
-    description = models.TextField(max_length=1000, 'Hur gör man?')
+    description = models.TextField(max_length=1000, help_text='Hur gör man?')
     
     added = models.TimeField(auto_now_add=True)
     updated = models.TimeField(auto_now=True)
