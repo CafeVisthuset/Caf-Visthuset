@@ -1,0 +1,28 @@
+{% extends 'visthuset_base.html' %}
+{% load static %}
+{% block titel %}Det händer på Visthuset!{% endblock %}
+{% block content %}
+	<section class="row">
+		<a href="{% url 'database:bike_booking' %}">
+			<div class="col-xs-12 col-md-4 img-hover">
+				<img class="img-responsive img-rounded" src="{% static 'img/cyklar.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
+				<h3 top="100%">Hyr cykel!</h3>
+			</div>
+		</a>
+		<a href="{% url 'uthyrning' %}">
+			<div class="col-xs-12 col-md-4 img-hover">
+    			<img class="img-responsive img-rounded" src="{% static 'img/cykel_paket.jpeg' %}" alt="Logga in!" width="100%"/>
+				<h3>Våra cykelpaket</h3><br>
+			</div>
+		</a>
+		{% for event in events %}
+		<a href="{% url 'events:event' %}">
+			<div class="col-sm-12 col-md-4 img-hover">
+		    	<img class="img-responsive img-rounded" src="{{ event.image.url }}" alt="{{ event.imageAlt }}" width="100%"/>
+				<h3 top="100%">{{ event.title }}</h3>
+				<p>{{ event.description | safe}}</p><br>
+			</div>
+		</a>
+		{% endfor %}
+	</section>
+{% endblock %}
