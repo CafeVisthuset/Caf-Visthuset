@@ -1,6 +1,11 @@
+a {
+	color: black;
+}
+
 body {
 	font-family: optima, areal, helvetica;
 	background-color: lightblue;
+	max-width: 1200px;
 }
 
 .container-fluid {
@@ -8,8 +13,9 @@ body {
 }
 	
 header {
-	background-color: lightblue;
-  	padding: 20px;
+	background-color: whitesmoke;
+  	padding: 35px;
+  	padding-top: 20px;
   }	
   
 .slide {
@@ -17,26 +23,35 @@ header {
 	margin-top: -20px;
 	margin-bottom: 0px;
 }
-
 section {
   background-color: whitesmoke;
-  padding-top: 10px;
+  padding-top: 0px;
   }
 section p {
   font-size: 1.3em;
-  }
+  color: black;
+  } 
+section h3 {
+  color: black;
+  } 
 @media screen and (max-width: 900px) {
   section {
     text-align: center;
     }
+   
+  section p img {
+  	width: 100%;
   }
+}
 @media screen and (min-width: 900px) {
   section img {
     margin-top: 30px;
     }
+  section p img {
+  	float: right;
+  }
 }
 section div {
-  background-color: whitesmoke;
   padding: 20px;
   }
 section .img-hover img {
