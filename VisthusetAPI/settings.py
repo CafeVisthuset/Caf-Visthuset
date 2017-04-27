@@ -45,7 +45,12 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.flatpages',
     'rest_framework',
+<<<<<<< HEAD
     'ckeditor',
+=======
+    'compressor',
+    'ckeditor'
+>>>>>>> master
 ]
 
 SITE_ID = 1
