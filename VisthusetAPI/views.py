@@ -13,8 +13,11 @@ def IndexView(request):
 class APIIndexView(generic.TemplateView):
     template_name = 'APIindex.html'
     
-class MenuView(generic.TemplateView):
-    template_name = 'Visthuset/menu.html'
+class MenyView(generic.TemplateView):
+    template_name = 'Visthuset/meny.html'
+
+class UthyrningView(generic.TemplateView):
+    template_name = 'Visthuset/uthyrning.html'    
     
 class CalendarView(generic.TemplateView):
     template_name = 'Visthuset/calendar.html'
