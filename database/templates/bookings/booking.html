@@ -6,8 +6,8 @@
 
 {% block content %}
 
-{{ message }}
 <section class="row">
+	
 	<div class="col-xs-12 col-md-6 col-offset-1 centered" >
 		<h2>Att cykla längs Göta kanal!</h2>
 
@@ -35,6 +35,7 @@
 		</p>
 	</div>
 	<div class="col-xs-12 col-md-6 col-offset-1 centered" >
+		{{ message }}
 		<form action="" method="post" >
 			{% csrf_token %}
 			{% render_form serializer template_pack='rest_framework/vertical' %}
