@@ -6,7 +6,7 @@ from django.http.response import HttpResponse
 
 # Create your views here.
 def IndexView(request):
-    events = Event.objects.filter(published='True')
+    events = Event.objects.filter(published='True').order_by('start_date')
     
     return render(request, 'visthuset_base.html', {'events': events})
 
