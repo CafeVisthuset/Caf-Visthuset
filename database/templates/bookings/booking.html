@@ -6,14 +6,41 @@
 
 {% block content %}
 
-{{ message }}
-<div class="row">
-	<section class="col-md-12 col-offset-1 centered" >
-		<form action="" style="width:40%;" method="post" >
+<section class="row">
+	
+	<div class="col-xs-12 col-md-6 col-offset-1 centered" >
+		<h2>Att cykla längs Göta kanal!</h2>
+
+		<p>
+			Ett härligt sätt att uppleva Göta kanal är med cykel. Här cyklar du längs vattnet 
+			på bilfria vägar där oxarna förr drog fram fraktskepp. Känn det naturnära, 
+			lantliga lugnet infinna sig och upplev myllret av människor runt slussarna, 
+			dåtidens klurigaste ingenjörskonst! Du hämtar cyklarna på Café Visthuset i Töreboda 
+			som är en bra utgångspunkt för att hinna med hela Göta kanals västgötasida.
+			<br><br>
+			Cykla längs Göta kanal passar för hela familjen. Här kan du hyra både barncyklar, barnsadlar och cykelkärror. 
+		</p>
+		<p>
+			Hos oss hyr du svensktillverkade kvalitetscyklar. Cykelhjälm ingår såklart i priset!<br><br>
+			
+			Priser: <br>
+			Heldag 175kr <br>
+			Halvdag 95kr <br>
+			Extradag vuxen 95kr <br>
+			Barncykel 120kr <br>
+			Extradag barn 75kr <br>
+			Barnsadel 50kr <br>
+			Cykelkärra 175kr <br>
+			Lunchpaket 85kr <br>
+		</p>
+	</div>
+	<div class="col-xs-12 col-md-6 col-offset-1 centered" >
+		{{ message }}
+		<form action="" method="post" >
 			{% csrf_token %}
 			{% render_form serializer template_pack='rest_framework/vertical' %}
 			<input type="submit" value="Boka!"/>
 		</form>
-	</section>
-</div>
+	</div>
+</section>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% load static %}
+{% load l10n %}
 <!DOCTYPE html>
 <html>
 	<head>
@@ -80,6 +81,7 @@
     	<main>
     	{% block content %}
       		<section class="row">
+      			<div class="row">
       			<a href="{% url 'meny' %}">
 					<div class="col-xs-12 col-md-4 img-hover">
 						<img class="img-responsive img-rounded" src="{% static 'img/coffeemaking.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
@@ -93,21 +95,27 @@
 				</div>
 				</a>
 				<a href="{% url 'contact' %}">
-					<div class="col-xs-12 col-md-4 img-hover">
+					<div class="col-xs-12 col-md-4 img-hover" height="100%">
 						<img class="img-responsive img-rounded" src="{% static 'img/contact.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
 	 					<h3 top="100%">Kontakta oss!</h3>
 					</div>
 				</a>
+				</div>
+				<div class="row">
 				{% for event in events %}
 				<a href="{% url 'events:event' %}">
 					<div class="col-sm-12 col-md-4 img-hover">
-						
+						<div class='imageholder'>
 				    	<img class="img-responsive img-rounded" src="{{ event.image.url }}" alt="{{ event.imageAlt }}" width="100%"/>
-						<h3 top="100%">{{ event.title }}</h3>
+						<div class='watermark'>
+							{{event.start_date|date:"d"}}<hr>{{event.start_date|date:"M"|localize}}</div>
+					</div>
+					<h3 top="100%">{{ event.title }}</h3>
 						<p>{{ event.description | safe}}</p><br>
 					</div>
 				</a>
 			{% endfor %}
+			</div>
 		</section>
 		{% endblock %}
     	</main>
