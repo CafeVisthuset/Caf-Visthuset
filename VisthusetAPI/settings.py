@@ -28,6 +28,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Email settings
+ADMINS = [('Adrian', 'adrian.g@telia.com'), ('David', 'davidskagerstam@hotmail.com')]
+SERVER_EMAIL = 'info@cafevisthuset.se'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'localhost'
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+EMAIL_PORT = 1025
+EMAIL_USE_LOCALTIME = True
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -44,6 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.flatpages',
+    'compressor',
     'rest_framework',
     'ckeditor',
 ]

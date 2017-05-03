@@ -1,12 +1,15 @@
 from django.contrib import admin
 from cleaning.forms import *
 from cleaning.models import *
+
+from django.core.exceptions import ValidationError
 '''
 TODO:
 * Färdigställ utifrån modellen
 * Lägg till fält i admin-vyn där dagens, morgonens och att-göra uppgifter syns
 
 '''
+from django.contrib.admin.sites import AdminSite
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
     fieldsets = [
@@ -45,6 +48,9 @@ class FridgeControl(admin.ModelAdmin):
     def save_model(self, request, obj, FridgeControlForm, change):
         higher = obj.measured > obj.prescribedMaxTempFridge
         lower = obj.measured < obj.prescribedMinTempFridge
+        if (higher or lower) and obj.measure == None:
+            raise ValidationError(
+                'Du har fyllt i en avvikelse utan att fylla i en åtgärd.')
         if higher or lower:
             obj.anomaly = True
             obj.save()
@@ -54,6 +60,7 @@ class FridgeControl(admin.ModelAdmin):
     
 @admin.register(FreezerTemp)
 class FreezerControl(admin.ModelAdmin):
+    AdminSite.site_title = 'Fryskontroll'
     fieldsets = [
         (None,              {'fields': ['date', 'unit']}),
         ('Temperaturer',    {'fields': ['measured']}),
@@ -66,12 +73,17 @@ class FreezerControl(admin.ModelAdmin):
     def save_model(self, request, obj, FridgeControlForm, change):
         higher = obj.measured > obj.prescribedMaxTempFreezer
         lower = obj.measured < obj.prescribedMinTempFreezer
+        if (higher or lower) and obj.measure == None:
+            raise ValidationError(
+                'Du har fyllt i en avvikelse utan att fylla i en åtgärd.')
         if higher or lower:
             obj.anomaly = True
             obj.save()
         else:
             obj.anomaly = False   
             obj.save()
+            
+
 @admin.register(Delivery)
 class DeliveryAdmin(admin.ModelAdmin):
     fieldsets = [
@@ -96,6 +108,7 @@ class IngredienceAdmin(admin.ModelAdmin):
         ('övrigt',          {'fields': ['allergen', 'supplier']}),
         ]
     list_display = ['name', 'supplier']
+    list_filter = ['supplier', 'allergen']
     
 class IngredienceInline(admin.TabularInline):
     model = RecepieIngredience

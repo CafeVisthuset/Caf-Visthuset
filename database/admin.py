@@ -151,11 +151,11 @@ class BookingsAdmin(admin.ModelAdmin):
     
     fieldsets = [
         (None,          {'fields': ['guest', 'booking', 'created_at', 'updated_at']}),
-        ('Info om gästen', {'fields': ['numberOfGuests', 'discount_code']}),
+        ('Info om gästen', {'fields': ['adults', 'children', 'discount_code']}),
         ('Specifikationer', {'fields': ['total', 'booked_bike_report', 'booked_room_report',
                                         'booked_lunch_report']}),
         ]
-    list_display = ['booking', 'guest', 'total', 'created_at', 'updated_at','numberOfGuests']
+    list_display = ['booking', 'guest', 'total', 'created_at', 'updated_at','adults', 'children']
     readonly_fields = ['booking', 'created_at', 'updated_at', 'booked_bike_report', 'booked_room_report',
                        'booked_lunch_report', 'total']
     
@@ -246,3 +246,4 @@ class GuestAdmin(StaffAdmin):
 admin.site.unregister(User)
 admin.site.register(Employee, StaffAdmin)
 admin.site.register(Guest, GuestAdmin)
+admin.site.register(User)

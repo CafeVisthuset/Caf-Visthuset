@@ -4,8 +4,8 @@
 
 {% block content %}
 
-<section class="row">
-	<div class="col-md-6" align="center">
+<section class="row" style="padding-bottom: 5%;">
+	<div class="col-md-5" align="center">
 		<h1>Kontakta oss!</h1>
 		<p>	Telefon: 0506 - 77 75 50 </p>
 	   <br>
@@ -21,7 +21,8 @@
 	   <br>
 	</div>
 	<div class="col-xs-12 col-md-6" align="center">
-		<img class="img-responsive img-rounded" src="/static/img/contact.jpg" width="60%" alt="Glass!" width="40%"/>
+		{% include '../social_snippets/google_maps.html' %}
+		<!--  <img class="img-responsive img-rounded" src="/static/img/contact.jpg" width="60%" alt="Glass!" width="40%"/> -->
 	</div>
 </section>
 

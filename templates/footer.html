@@ -1,5 +1,14 @@
 {% load static %}
 <footer class="row">
+	<div class="col-md-12 col-md-12" style="margin-top: 2%;">
+		<div class="col-md-12 col-md-4">
+		{% include './social_snippets/facebook_like.html' %}
+		</div>
+
+		<div class="col-md-12 col-md-2">
+		{% include './social_snippets/tripadvisor_footer.html' %}
+		</div>
+	</div>
 	<div class="col-md-12 col-md-3" style="margin-top: 2%;" >
     	<h3>Kontakta oss!</h3>
       	<adress>Café Visthuset<br>
@@ -25,7 +34,7 @@
             
         <h3>Samarbeta med oss!</h3>
         <a href="{% url 'api_index' %}">
-     	<p>Visthusets API</p>
+     	<p>API</p>
     	</a>
     </div>
  </footer>
