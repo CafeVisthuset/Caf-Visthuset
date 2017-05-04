@@ -21,12 +21,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '1zt5_j6zm#^s)_*=s-*nlgjmh1au8y@$6fc%_h@eidpnhh9_4l'
+SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+# Email settings
+ADMINS = [('Adrian', 'adrian.g@telia.com'), ('David', 'davidskagerstam@hotmail.com')]
+SERVER_EMAIL = 'info@cafevisthuset.se'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'localhost'
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+EMAIL_PORT = 1025
+EMAIL_USE_LOCALTIME = True
+
 
 # Application definition
 
@@ -44,6 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.flatpages',
+    'compressor',
     'rest_framework',
     'ckeditor',
 ]

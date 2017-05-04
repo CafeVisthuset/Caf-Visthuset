@@ -378,11 +378,12 @@ class BookingManager(models.Manager):
      
     '''
     # Create, update, delete
-    def create_booking(self, guest, start_date, end_date, numberOfGuests, special_requests):
+    def create_booking(self, guest, start_date, end_date, adults, children, special_requests):
         return self.create(guest=guest,
                               start_date=start_date, 
                               end_date=end_date,
-                              numberOfGuests=numberOfGuests,
+                              adults=adults,
+                              children=children,
                               special_requests=special_requests)
         
     def update_booking(self, booking_number, **kwargs):
@@ -407,7 +408,8 @@ class Booking(models.Model):
     
     # Booking specs
     booking = models.PositiveIntegerField(primary_key=True, verbose_name='boknings id', default=calc_booking_no)
-    numberOfGuests = models.IntegerField(null= False, default = 2, verbose_name='antal gäster')
+    adults = models.IntegerField(null= False, default = 2, verbose_name='antal vuxna')
+    children = models.IntegerField(null=True, default = 0, verbose_name='antal barn')
     special_requests = models.TextField(max_length = 255, null=True, blank= True, verbose_name= 'övrigt')
     
     # Fields for preliminary bookings

@@ -21,7 +21,7 @@ class StaffManager(models.Manager):
             Q(is_staff=True) | Q(is_superuser=True))
         
 class Staff(User):
-    objects = StaffManager()
+    
     class Meta:
         proxy = True
         verbose_name = 'anställd'
@@ -51,7 +51,7 @@ class WorkingSpecs(models.Model):
         abstract = True
         
 class Employee(Staff, WorkingSpecs):
-
+    objects = StaffManager()
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
     

@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect, render_to_response
-from django.http.response import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, redirect
+from django.http.response import HttpResponse
 from .models import Booking, Bike, LunchBooking, calc_booking_no
 from .forms import CreateAvailableBikeForm
 from datetime import datetime, timedelta, date
@@ -13,11 +13,12 @@ from database.serializers import BikeBookingSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.contrib.auth.models import User
-from time import strftime
 from database.helperfunctions import setInput, create_date_list
-from django.urls.base import reverse
+from docs.models import EmailTexts
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.core.mail.message import EmailMultiAlternatives
+from django.template import Template, Context
 
 def index(request):
     latest_booking_list = Booking.objects.order_by('-BookingDate')[:5]
@@ -174,15 +175,24 @@ class BikeBookingResponseView(APIView):
             
             # Bike information
             adult_bikes = setInput(serializer, 'adult_bikes')
+            if adult_bikes is None:
+                adult_bikes = 0
             young_bikes = setInput(serializer, 'young_bikes')
+            if young_bikes is None:
+                young_bikes = 0 
             child_bikes = setInput(serializer, 'child_bikes')
+            if child_bikes is None:
+                child_bikes = 0
             small_child_bikes = setInput(serializer, 'small_child')
+            if small_child_bikes is None:
+                small_child_bikes = 0
             extras = setInput(serializer, 'extras')
             
             bikes = {'adult': adult_bikes, 'young': young_bikes, 'child': child_bikes,
                     'smallChild': small_child_bikes}
             
-            number_of_guests = adult_bikes + child_bikes
+            number_of_adults = adult_bikes
+            number_of_children = int(small_child_bikes) + int(child_bikes) + int(young_bikes)
             
             # Lunch information
             veg = setInput(serializer, 'vegetarian_lunches')
@@ -195,7 +205,6 @@ class BikeBookingResponseView(APIView):
             other = setInput(serializer, 'other')
             
             # Check availability of bikes
-            
             biketype_dict = {'adult': 'vuxencykel', 'young': 'ungdomscykel', 'child': 'barncykel',
                     'smallChild': 'småbarncykel'}
             
@@ -231,7 +240,8 @@ class BikeBookingResponseView(APIView):
                                         guest=guest,
                                         start_date=start_date,
                                         end_date=end_date,
-                                        numberOfGuests=number_of_guests, 
+                                        adults=number_of_adults,
+                                        children=number_of_children, 
                                         special_requests=other)
 
             # Book bikes
@@ -272,23 +282,49 @@ def confirmation_view(request, pk):
     first_name = booking.guest.first_name
     start_date = booking.start_date
     end_date = booking.end_date
-     
+    duration = end_date - start_date
+    
     if booking.booked_bike is not None:
         included['bikes'] = booking.booked_bike
         
-        
-    # What to send back to the view
+    if booking.booked_lunches is not None:
+        included['lunches'] = booking.booked_lunches
+    
     message = mark_safe(
     ''' <h1>Tack {0} för din bokning!</h1><br>
-                
-    Du startar den {1} och reser hem igen den {2}. </br>
-                
+    <br>
+    Vi har skickat en bekräftelse till din epostadress.<br>
+    <br>        
+    Startdag: {1} <br>
+    Antal dagar {2} <br>
+    Antal vuxna {3} <br>
+    Antal barn {4} <br>
+    <br>
     I din bokning ingår följande:
-    '''.format(booking.guest.first_name, booking.start_date.strftime('%d %B %Y'), booking.end_date.strftime('%d %B %Y')))
-     
-    return render(request, 'bookings/confirmation.html', {'booking_number': booking,
-                                                          'message': message,
-                                                          'included_bikes': booking.booked_bike,
-                                                          'includes_lunches': booking.booked_lunches,
-                                                          'email': booking.guest.email})
+    '''.format(booking.guest.first_name, booking.start_date.strftime('%d %B %Y'), duration, booking.adults, booking.children))
+    
+    # What to send back to the view        
+    c = Context({'booking_number': booking,
+        'first_name': booking.guest.first_name,
+        'message': message,
+        'start_date': start_date,
+        'duration': duration,
+        'adults': booking.adults,
+        'children': booking.children,
+        'included_bikes': booking.booked_bike,
+        'includes_lunches': booking.booked_lunches,
+        'email': booking.guest.email})
+    
+    # Email stuff
+    obj = EmailTexts.objects.get(name='CykelTack')
+    
+    plain_text = Template(obj.plain_text)
+    html_content = Template(obj.html_message)
+    
+    send_mail(obj.title, plain_text.render(c), 'boka@cafevisthuset.se',
+                                [booking.guest.email], ['boka@cafevisthuset.se'],
+                                html_message=html_content.render(c))
+
+    
+    return render(request, 'bookings/confirmation.html', c)
 
