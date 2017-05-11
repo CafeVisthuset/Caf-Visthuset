@@ -2,45 +2,42 @@
 
 {% load rest_framework %}
 
-{% block title %}<title>Cafe Visthuset - Boka cyklar</title>{% endblock %}
+{% block title %}<title>{{ page.title }}</title>{% endblock %}
 
 {% block content %}
 
 <section class="row">
-	
-	<div class="col-xs-12 col-md-6 col-offset-1 centered" >
-		<h2>Att cykla längs Göta kanal!</h2>
-
-		<p>
-			Ett härligt sätt att uppleva Göta kanal är med cykel. Här cyklar du längs vattnet 
-			på bilfria vägar där oxarna förr drog fram fraktskepp. Känn det naturnära, 
-			lantliga lugnet infinna sig och upplev myllret av människor runt slussarna, 
-			dåtidens klurigaste ingenjörskonst! Du hämtar cyklarna på Café Visthuset i Töreboda 
-			som är en bra utgångspunkt för att hinna med hela Göta kanals västgötasida.
-			<br><br>
-			Cykla längs Göta kanal passar för hela familjen. Här kan du hyra både barncyklar, barnsadlar och cykelkärror. 
-		</p>
-		<p>
-			Hos oss hyr du svensktillverkade kvalitetscyklar. Cykelhjälm ingår såklart i priset!<br><br>
-			
-			Priser: <br>
-			Heldag 175kr <br>
-			Halvdag 95kr <br>
-			Extradag vuxen 95kr <br>
-			Barncykel 120kr <br>
-			Extradag barn 75kr <br>
-			Barnsadel 50kr <br>
-			Cykelkärra 175kr <br>
-			Lunchpaket 85kr <br>
-		</p>
+	<div class="col-xs-11 col-md-11 col-offset-1 centered" >
+		<h1>{{ page.headline }}</h1>
+		{{ page.ingress | safe }}
 	</div>
-	<div class="col-xs-12 col-md-6 col-offset-1 centered" >
+	{% for text in texts %}
+	<div class="col-s-12 col-md-5">
+		<h2>{{ text.headline }}</h2>
+		{% if text.image %}
+		<img class="img-responsive col-s-12 col-md-3" src="/{{ text.image }}" alt="{{ text.image_alt }}">
+		{% endif %}
+		<p>{{ text.text | safe }}</p>
+	</div>
+	{% endfor %}
+	
+	<div class="col-xs-11 col-md-5 col-offset-1 centered" style="padding-bottom: 5%;">
 		{{ message }}
 		<form action="" method="post" >
 			{% csrf_token %}
-			{% render_form serializer template_pack='rest_framework/vertical' %}
-			<input type="submit" value="Boka!"/>
+			{% for field in form %}
+		    <!--  <div class="form-group">-->
+		        {{ field.errors }}
+		        {{ field.label_tag }}<br>
+		        {{ field }}<br>
+		        {% if field.help_text %}
+		        <p class="help">{{ field.help_text|safe }}</p>
+		        {% endif %}
+		    	
+			{% endfor %}
+			<input type="submit" class="btn btn-secondary" value="Boka!"/>
 		</form>
 	</div>
 </section>
 {% endblock %}
+{% render_form serializer template_pack='rest_framework/vertical' %}

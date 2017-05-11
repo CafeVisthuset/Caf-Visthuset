@@ -1,28 +1,24 @@
 {% extends '../visthuset_base.html'%}
 
-{% block title %}<title>Cafe Visthuset - kontakt</title>{% endblock %}
+{% block title %}<title>{{ page.title }}</title>{% endblock %}
 
 {% block content %}
-
 <section class="row" style="padding-bottom: 5%;">
-	<div class="col-md-5" align="center">
-		<h1>Kontakta oss!</h1>
-		<p>	Telefon: 0506 - 77 75 50 </p>
-	   <br>
-	   <adress>
-		   	<p> Adress:<br>
-		       Kanalvägen 2<br>
-		       545 30 Töreboda
-		 	</p>
-	   </adress>
-	   <p> 
-	       <a href="mailto:info@cafevisthuset.se">Visthusets e-post</a><br>
-	   </p>
-	   <br>
+	<div class="col-md-12">
+		<h1>{{ page.headline }}</h1>
+		{{ page.ingress | safe }}
 	</div>
+	{% for text in texts %}
+	<div class="col-s-12 col-md-5 centered">
+		<h2>{{ text.headline }}</h2>
+		{% if text.image %}
+		<img class="img-responsive col-s-12 col-md-3" src="/{{ text.image }}" alt="{{ text.image_alt }}">
+		{% endif %}
+		<p>{{ text.text | safe }}</p>
+	</div>
+	{% endfor %}
 	<div class="col-xs-12 col-md-6" align="center">
 		{% include '../social_snippets/google_maps.html' %}
-		<!--  <img class="img-responsive img-rounded" src="/static/img/contact.jpg" width="60%" alt="Glass!" width="40%"/> -->
 	</div>
 </section>
 

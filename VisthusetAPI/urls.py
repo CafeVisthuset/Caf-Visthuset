@@ -29,11 +29,11 @@ router.register(r'users', UserViewSet)
 urlpatterns = [
     # Visthuset urls
     url(r'^$', IndexView, name="visthuset_index"),
-    url(r'^meny/$', MenyView.as_view(), name="meny"),
+    url(r'^meny/$', meny_view, name="meny"),
     url(r'^calendar/$', CalendarView.as_view(), name="calendar"),
     url(r'^events/', include('events.urls')),
-    url(r'^about/$', AboutView.as_view(), name="about"),
-    url(r'^contact/$', ContactView.as_view(), name="contact"),
+    url(r'^about/$', about_view, name="about"),
+    url(r'^contact/$', contact_view, name="contact"),
     url(r'^ckeditor/', include('ckeditor_uploader.urls')),
     url(r'^uthyrning/$', UthyrningView.as_view(), name="uthyrning"),
     

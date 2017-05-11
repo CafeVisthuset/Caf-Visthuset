@@ -81,6 +81,7 @@
     	<main>
     	{% block content %}
       		<section class="row">
+      			<h1 class="text-center">Välkommen, vad letar du efter?</h1>
       			<div class="row">
       			<a href="{% url 'meny' %}">
 					<div class="col-xs-12 col-md-4 img-hover">
@@ -101,6 +102,7 @@
 					</div>
 				</a>
 				</div>
+				<h1 class="col-sm-12 text-center">Det här händer på Café Visthuset</h1>
 				<div class="row">
 				{% for event in events %}
 				<a href="{% url 'events:event' %}">

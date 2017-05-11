@@ -10,7 +10,7 @@ from database.models import BikeExtra, Bike, LunchBooking, BikesBooking,\
 from .choices import Lunch_Choices, Action_Choices, YEARS, MONTHS
 from django.forms.formsets import BaseFormSet
 from django.forms.widgets import SelectDateWidget
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from database.helperfunctions import date_list_in_bike_list
 from database.validators import positive_integer
 from database.choices import Day_Choices
@@ -144,18 +144,30 @@ class BaseCreateAvailableBikeFormset(BaseFormSet):
         #            'Startdatumet får inte vara före slutdatumet')
                 
 ###############################################################################
-class BookingForm(forms.Form):
+class CustomerBikeBookingForm(forms.Form):
+    '''
+    Form for booking bike by customer.
+    '''
     # Dates and time
-    start_date = forms.DateField(required=True,
+    start_date = forms.DateField(label='Startdag', required=True,
                                  initial=date.today(),
-                                 widget=forms.SelectDateWidget)
-    duration = forms.ChoiceField(choices=Day_Choices, required=True)
+                                 widget=forms.SelectDateWidget(
+                                     years=[date.today().year],
+                                     attrs={'class':'col-form-label'}))
+    duration = forms.ChoiceField(label='Antal dagar', choices=Day_Choices, required=True)
     
     # Bikes and extras
-    number_adult_bikes = forms.ChoiceField(
+    adult_bikes = forms.ChoiceField(label='Antal vuxencyklar',
         initial=2,
-        choices=[(number, '%s' % (number)) for number in range(0,11)])
-    number_child_bikes = forms.ChoiceField(
+        choices=[(number, '%s' % (number)) for number in range(0,21)])
+    young_bikes = forms.ChoiceField(label='Antal ungdomscyklar(12-16 år)',
+        initial=0,
+        choices=[(number, '%s' % (number)) for number in range(0,4)])
+    child_bikes = forms.ChoiceField(label='Antal barncyklar(9-12 år)',
+        initial=0,
+        choices=[(number, '%s' % (number)) for number in range(0,4)])
+    small_child_bikes = forms.ChoiceField(label='antal småbarncyklar (6-9 år)',
+        initial=0,
         choices=[(number, '%s' % (number)) for number in range(0,4)])
     #number_extras = forms.MultipleChoiceField(
     #    choices=BikeExtra.objects.all())
@@ -166,10 +178,10 @@ class BookingForm(forms.Form):
     number_fish_lunches = forms.IntegerField(validators=[positive_integer])
     
     # Guest info
-    first_name = forms.CharField(max_length=25)
-    last_name = forms.CharField(max_length=25)
-    phone_number = forms.CharField(max_length=25, required=False)
-    email = forms.EmailField()
+    first_name = forms.CharField(max_length=25, label='Förnamn', required=True)
+    last_name = forms.CharField(label='Efternamn', max_length=25)
+    phone_number = forms.CharField(max_length=25, required=False, label='Telefon')
+    email = forms.EmailField(label='Epost')
     newsletter = forms.BooleanField(
         initial = True,
         help_text= 'Vill du ha nyheter och erbjudanden från oss?')

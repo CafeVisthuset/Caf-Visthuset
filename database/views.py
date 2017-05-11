@@ -4,7 +4,7 @@ from .models import Booking, Bike, LunchBooking, calc_booking_no
 from .forms import CreateAvailableBikeForm
 from datetime import datetime, timedelta, date
 from django.forms.formsets import formset_factory
-from database.forms import BaseCreateAvailableBikeFormset, BookingForm
+from database.forms import BaseCreateAvailableBikeFormset, CustomerBikeBookingForm
 from django.contrib.admin.views.decorators import staff_member_required
 from database.models import BikeAvailable, BikeExtra, Guest, Lunch
 from django.utils.safestring import mark_safe
@@ -19,6 +19,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.core.mail.message import EmailMultiAlternatives
 from django.template import Template, Context
+from docs.models import Page, PageContent
 
 def index(request):
     latest_booking_list = Booking.objects.order_by('-BookingDate')[:5]
@@ -275,7 +276,22 @@ class BikeBookingResponseView(APIView):
         # if form is not correctly filled in
         return Response({'serializer': serializer,
                          'message': 'Alla fält måste vara korrekt ifyllda!'})
+
+def customer_bike_booking_view(request):
+    if request.method == 'POST':
+        form = CustomerBikeBookingForm(request.POST)
+        if form.is_valid():
+            print(form)
+            pass
+    
+    else:
+        form = CustomerBikeBookingForm()
         
+    pagename = 'uthyrning'
+    page = Page.objects.get(name=pagename)
+    texts = PageContent.objects.filter(page__name = pagename, publish=True).order_by('order')
+    return render(request, 'bookings/booking.html', {'form': form, 'page':page, 'texts':texts})  
+      
 def confirmation_view(request, pk):
     included = {}
     booking = Booking.objects.get(booking=pk)

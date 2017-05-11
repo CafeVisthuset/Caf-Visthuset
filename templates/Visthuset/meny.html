@@ -1,8 +1,32 @@
 {% extends '../visthuset_base.html' %}
-
-{% block title %}<title>Cafe Visthuset - Vår meny</title>{% endblock %}
+{% load static %}
+{% block title %}<title>{{ page.title }}</title>{% endblock %}
 
 {% block content %}
+<section class="row">
+	<div class="col-md-12">
+		<h1>{{ page.headline }}</h1>
+		{{ page.ingress | safe }}
+	</div>
+	{% for text in texts %}
+	<div class="col-md-12">
+		<h2 class="col-md-12">{{ text.headline }}</h2>
+		{% if text.image %}
+		<img class="img-responsive col-s-12 col-md-3" src="/{{ text.image }}" alt="{{ text.image_alt }}">
+		<div class="col-s-12 col-md-9 pull-right">
+			{{ text.text | safe }}
+		</div>
+		{% else %}	
+		<div class="col-m-12">
+			{{ text.text | safe }}
+		</div>
+		{% endif %}	
+	</div>
+	{% endfor %}
+	
+</section>
+{% endblock %}
+<!-- {% static '/img/uploads/coffeemaking.jpg' %}
 <section class="row">
 	<div class="col-md-12 col-md-12">
 		<h1 > Café Visthusets meny! </h1>
@@ -134,5 +158,4 @@
 			isté, must, saft, läsk och lättöl från flera olika lokala producenter.
 		</p>
 	</div>
-</section>  
-{% endblock %}
+</section>  -->

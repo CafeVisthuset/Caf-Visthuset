@@ -1,41 +1,22 @@
 {% extends '../visthuset_base.html'%}
 
-{% block title %}Cafe Visthuset - Om oss{% endblock %}
+{% block title %}<title>{{ page.title }}</title>{% endblock %}
 
 {% block content %}
 <section class="row">
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-	<div class="col-s-12 col-md-8 col-lg-7">
-=======
-	<div class="col-md-12" align="center">
->>>>>>> origin/master
-=======
-	<div class="col-md-12" align="center">
->>>>>>> 51b3eaea4300904afec854045028c7bc0092c9c2
-		<p>Vintern 2010 påbörjades arbetet med att rusta en av Törebodas äldsta byggnader. 
-		Femtio år hade gått sedan den siste slaktaren i raden av tre lade ner sin verksamhet på platsen. 
-		Under åren som följde var det ingen som sörjde för byggnadens omvårdnad och dess skick blev med 
-		tiden allt mer nedgånget. Röster höjdes för att riva stället och så var det också nära att det 
-		blev. Men av någon anledning sparades huset och användes under tio år delvis som förråd och 
-		garage. Under tiden som vi har arbetat med att rusta upp huset har vi hört många historier av 
-		och om de människor som har vistats här.</p>
-		
-		<p>Sedan Slaktare Johannes tid, 1910 och framåt har det varit en mötesplats där man handlade, 
-		samtalade och kanske skrävlade. Säkerligen fick man också höra det senaste om folket runt om i 
-		bygderna. Vid den tiden fanns det också en smedja och ett bageri på platsen så man kan tänka sig 
-		att det rörde sig mycket folk här då.</p>
-		
-		<p>Under sommrarna 2011 och 2012 hade vi verksamhet på nedervåningen i ena delen av byggnaden. 
-		Inför 2013 års sommarsäsong arbetar vi med att få till en utställningslokal och sittplatser en 
-		trappa upp. På loftet kan man i lugn och ro avnjuta en fika eller lunch. Eller varför inte en 
-		glass i vår trädgård som ligger alldeles invid kanalen. Fråga gärna när du kommer in om du 
-		vill veta mer om Visthuset och människorna från platsen.</p>
+		<div class="col-md-12">
+		<h1>{{ page.headline }}</h1>
+		{{ page.ingress | safe }}
 	</div>
-<<<<<<< HEAD
-<<<<<<< HEAD
-	
+	{% for text in texts %}
+	<div class="col-s-12 col-md-6">
+		<h2>{{ text.headline }}</h2>
+		{% if text.image %}
+		<img class="img-responsive col-s-12 col-md-3" src="/{{ text.image }}" alt="{{ text.image_alt }}">
+		{% endif %}
+		<p>{{ text.text | safe }}</p>
+	</div>
+	{% endfor %}
 	<div class="col-s-12 col-md-4 col-lg-4">
 		{% include '../social_snippets/facebook_box.html' %}
 	</div>
@@ -51,10 +32,4 @@
 	<div class="col-s-12 col-md-12 col-lg-4"></div>
 </section>
 
-=======
-</section>
->>>>>>> origin/master
-=======
-</section>
->>>>>>> 51b3eaea4300904afec854045028c7bc0092c9c2
 {% endblock %}

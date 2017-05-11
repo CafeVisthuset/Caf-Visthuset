@@ -117,11 +117,19 @@ class IngredienceInline(admin.TabularInline):
 @admin.register(Recepie)
 class RecepieAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,              {'fields': ['name']}),
-        ('Priser',          {'fields': ['customer_price', 'retailer_price', 'pieces'
-                                        'work_hours']}),
-                 
+        (None,              {'fields': ['name', 'added', 'updated']}),
+        ('Priser',          {'fields': ['customer_price', 'retailer_price', 'pieces',
+                                        ]}),
+        ('Produktion',      {'fields': ['work_hours', 'oven_time', 'description']})
         ]
+    readonly_fields = ['added', 'updated']
     inlines = [IngredienceInline]
     list_display = ['name', 'customer_price', 'retailer_price', 'pieces', 'work_hours']
+    
+@admin.register(Production)
+class ProductionAdmin(admin.ModelAdmin):
+    fields = ['recepie', 'amount', 'date', 'signature']
+    list_display = ['recepie', 'amount', 'date', 'signature']
+    
+    list_filter = ['recepie', 'date', 'signature']
     
