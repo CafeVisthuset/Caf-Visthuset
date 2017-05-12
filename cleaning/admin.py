@@ -9,7 +9,7 @@ TODO:
 * Lägg till fält i admin-vyn där dagens, morgonens och att-göra uppgifter syns
 
 '''
-from django.contrib.admin.sites import AdminSite
+
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
     fieldsets = [
@@ -19,7 +19,7 @@ class SupplierAdmin(admin.ModelAdmin):
         ]
     list_display = ['name', 'contact', 'phone', 'email', 'order_day']
     
-    
+'''    
 @admin.register(Fridge)
 class FridgeAdmin(admin.ModelAdmin):
     fields = ['type', 'location', 'active']
@@ -83,15 +83,16 @@ class FreezerControl(admin.ModelAdmin):
             obj.anomaly = False   
             obj.save()
             
-
+'''
 @admin.register(Delivery)
 class DeliveryAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,              {'fields': ['supplier', 'date']}),
+        (None,              {'fields': ['supplier', 'date', 'created', 'updated']}),
         ('Genomgång',       {'fields': ['damaged', 'expired']}),
         ('Signering',       {'fields': ['signature']}),
         ]
-    list_display = ['supplier', 'date', 'anomaly', 'signature']
+    readonly_fields = ['created', 'updated']
+    list_display = ['supplier', 'date', 'anomaly', 'signature', 'created', 'updated']
     
 @admin.register(Allergen)
 class AllergenAdmin(admin.ModelAdmin):

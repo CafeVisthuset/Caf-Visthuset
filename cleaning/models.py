@@ -70,7 +70,6 @@ class Hazard(models.Model):
     description = models.TextField(max_length=500)
     routine = models.ForeignKey(
         Routine,
-        related_name='routine',
         on_delete=models.PROTECT,
         blank=True
         )
@@ -122,15 +121,15 @@ class ColdStorageManager(models.Manager):
         return super(StorageManager, self).create(**kwargs)
     
 class ColdStorageExtra(models.Model):
+    class Meta:
+        abstract = True
+        
+class ColdStorage(ControlPoint):
     kind = models.CharField(max_length=15, 
                             choices=[('freeze', 'Frys'), ('fridge', 'kyl'), ('cool', 'sval')])
     prescribedMaxTemp = models.IntegerField()
     prescribedMinTemp = models.IntegerField()
     
-    class Meta:
-        abstract = True
-        
-class ColdStorage(ControlPoint, ColdStorageExtra):
     objects = ColdStorageManager()
     class Meta:
         proxy=True
@@ -191,29 +190,33 @@ class CriticalControlPointManager(models.Manager):
     def get_queryset(self):
         return super(CriticalControlPointManager, self).get_queryset().filter(
             hazard__routine_sufficient = False) 
-    
-class CriticalControlPointExtra(models.Model):
+        
+class CriticalControlPoint(ControlPoint):
     upper_limit = models.CharField(max_length=100)
     lower_limit = models.CharField(max_length=100)
     extra_monitoring = models.TextField(max_length=500)
     
-    class Meta:
-        abstract = True
-        
-class CriticalControlPoint(ControlPoint, CriticalControlPointExtra):
     objects = CriticalControlPointManager()
     class Meta:
         proxy = True
         
 class Documentation(models.Model):
-    control_point = GenericRelation(ControlPoint, many_to_one=True, one_to_many=False)
+    control_point = GenericRelation(ControlPoint)
+    date = models.DateField(default=date.today)
     anomaly = models.BooleanField(default=False, verbose_name='avvikelse')
     measure = models.CharField(blank=True, max_length=100, verbose_name='åtgärd',
         help_text='Vilken åtgärd har tagits?')
+    signature = models.ForeignKey(
+        Employee, 
+        on_delete=models.PROTECT,
+        related_name='signature',
+        )
+    
     comment = models.TextField(max_length=255, blank=True, verbose_name='kommentar')
     
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
+    
     
     def open_visthuset(self):
         if not self.open:
