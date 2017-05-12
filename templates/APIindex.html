@@ -1,0 +1,27 @@
+{% extends 'visthuset_base.html' %}
+{% load static %}
+
+{% block title %}<title>Välkommen till Café Visthusets API</title>{% endblock %}
+
+{% block content %}
+	<section class="row">
+		<div class="col-md-12">
+			<h2>Vad vill du göra?</h2>
+		    <p> Sidan är för tillfället under konstruktion. </p>
+		</div>
+		<div class="col-md-12 col-md-6 img-hover">
+    		<a href="/admin/">
+	    	    <img class="img-responsive img-rounded" src="{% static '/img/api/ingrid.jpg' %}" alt="Logga in!"/>
+	    	    <h3>Logga in!</h3><br>
+  	  		</a>
+  	  	</div>
+  	  	<div class="col-md-12 col-md-6 img-hover">
+  	  		<a href="/docs/">
+  		    	<img class="img-responsive img-rounded" src="{% static '/img/api/glass.jpg' %}" alt="Kolla in vår dokumentation!" />
+    		  	<h3>Kolla in vår dokumentation!</h3>
+    		</a>
+    	</div>
+    </section>
+{% endblock %}
+
+

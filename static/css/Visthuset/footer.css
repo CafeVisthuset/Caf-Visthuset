@@ -1,0 +1,27 @@
+footer {
+  margin-bottom: 50px;
+  }
+
+footer div {
+  margin: 0 auto;
+  text-align: center;
+  align: center;
+  }
+
+@media screen and (max-width: 900px) {
+  footer img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 40px;
+    }
+}
+
+@media screen and (min-width: 900px) {
+    footer img {
+      margin: 0 auto;
+      padding: 20px;
+      display: block;
+      margin: auto; 
+    }
+  }
