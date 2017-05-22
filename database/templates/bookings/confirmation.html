@@ -1,29 +1,47 @@
 {% extends "../visthuset_base.html" %}
-{% block title %}<title>Tack för din bokning!</title>{% endblock %} 
+{% block title %}<title>{{ page.title }}</title>{% endblock %} 
 
 {% block content %}
-<h1>Tack för din bokning!</h1>
-<h3>Ditt bokningsnummer är {{ booking_number }}</h3>
+<section class="row">
+	<div class="col-sm-12 col-md-6">
+	<h1 class="text-info">{{ headline }}</h1>
+	<p>{{ ingress }}</p>
+	<p>{{ confirmation }}</p>
+	</div>
+	{% if texts %}
+	<div class="col-sm-12 col-md-6">
+		{% for text in texts %}
+			<h3 class="text-info">{{ text.headline }}</h3>
+			<p>{{ text.text | safe }}</p>
+		{% endfor %}
+	</div>
+	{% endif %}
+	{% if texts.image %}
+	<div class="img-responsive">
+		<img src="{{ texts.image }}">
+	</div>
+	{% endif %}
+	{% if included_bikes.keys is not None %}
+	<div>
+		<h3 class="text-info">Cyklar</h3>
+		<p>
+		{% for key, value in included_bikes.items %}
+			{{ value }} st {{ key }}<br>
+		{% endfor %}
+		</p>
+	</div>
+	{% endif %}
+	
+	{% if included_lunches %}
+	<div class="text-info">
+		<h3>Luncher</h3>
+		<p>
+		{% for key, value in included_lunches.items %}
+			{{ value }} {{ key }}<br>
+		{% endfor %}
+		</p>
+	</div>
+	{% endif %}
 
-<div>
-<p>{{ message }}</p>
-{% if included_bikes.keys is not None %}
-	<h3>Cyklar</h3>
-	<p>
-	{% for key, value in included_bikes.items %}
-		{{ value }} st {{ key }}<br>
-	{% endfor %}
-	</p>
-{% endif %}
-
-{% if included_lunches %}
-	<h3>Luncher</h3>
-	<p>
-	{% for key, value in included_lunches.items %}
-		{{ value }} {{ key }}<br>
-	{% endfor %}
-	</p>
-{% endif %}
-</div>
-
+</section>
 {% endblock content %}

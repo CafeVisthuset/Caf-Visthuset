@@ -3,97 +3,149 @@ from cleaning.forms import *
 from cleaning.models import *
 
 from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.admin import GenericTabularInline
 '''
 TODO:
 * Färdigställ utifrån modellen
 * Lägg till fält i admin-vyn där dagens, morgonens och att-göra uppgifter syns
 
 '''
+class ControlPointInline(GenericTabularInline):
+    model = ControlPoint
+    
+@admin.register(Routine)
+class RoutineAdmin(admin.ModelAdmin):
+    form = RoutineForm
+    fieldsets = [
+        (None,      {'fields':['name', 'created', 'updated', 'purpose']}),
+        ('Beskrivning', {'fields':['description']}),
+        ('Vid avvikelse', {'fields':['monitoring', 'anomaly_measure', 'anomaly_correction']}),
+        #('Kontrollpunkter', {'fields': ['control_points']}),
+        ]
+    readonly_fields = ['created', 'updated']
+    list_display = ['name', 'created', 'updated']
+    
+@admin.register(Hazard)
+class HazardAdmin(admin.ModelAdmin):
+    form = HazardForm
+    fieldsets = [
+        (None,              {'fields':['name']}),
+        ('Kategorisering',  {'fields': ['type', 'how']}),
+        ('Beskrivning',     {'fields': ['description']}),
+        ('Analys',          {'fields': ['analysis']}),
+        ]
+    list_display= ['name', 'type', 'how']
+    
+@admin.register(ColdStorage)
+class ColdStorageAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,              {'fields':['name', 'created', 'updated']}),
+        ('Grunder',         {'fields':['active', 'location', 'short_description']}),
+        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ('Temperaturer',    {'fields': ['number', 'kind', 'prescribedMaxTemp', 'prescribedMinTemp']})
+        ]
+    readonly_fields = ['created', 'updated']
+    list_display = ['name', 'number', 'active', 'kind', 'created', 'updated']
+    
+@admin.register(Storage)
+class StorageAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,              {'fields':['name', 'created', 'updated']}),
+        ('Grunder',         {'fields':['active', 'location', 'short_description']}),
+        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ]
+    readonly_fields = ['created', 'updated']
+    list_display = ['name', 'active', 'created', 'updated']
+    
+@admin.register(Preparation)
+class PreparationAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,              {'fields':['name', 'created', 'updated']}),
+        ('Grunder',         {'fields':['active', 'location', 'short_description']}),
+        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ]
+    readonly_fields = ['created', 'updated']
+    list_display = ['name', 'active', 'created', 'updated']
+    
+@admin.register(Serving)
+class ServingAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,              {'fields':['name', 'created', 'updated']}),
+        ('Grunder',         {'fields':['active', 'location', 'short_description']}),
+        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ]
+    readonly_fields = ['created', 'updated']
+    list_display = ['name', 'active',  'created', 'updated']
+    
+@admin.register(CriticalControlPoint)
+class CriticalControlPointAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,              {'fields':['name', 'created', 'updated']}),
+        ('Grunder',         {'fields':['active', 'location', 'short_description']}),
+        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ('Extra riskminimering', {'fields': ['extra_monitoring', 'upper_limit',
+                                             'lower_limit']}),
+        ]
+    readonly_fields = ['created', 'updated']
+    list_display = ['name', 'active', 'created', 'updated']
 
-@admin.register(Supplier)
-class SupplierAdmin(admin.ModelAdmin):
+@admin.register(Temperature)
+class TemperatureAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,              {'fields': ['name', 'contact', 'phone', 'email']}),
-        ('Beställningar',   {'fields': ['order_day']}),
-        ('Beskrivning',     {'fields': ['description', 'goods', 'other']}),
+        (None,              {'fields': ['control_point', 'date', ]}),
+        ('Kontroll',        {'fields': ['measured', 'measure']}),
+        ('Signering',       {'fields': ['signature', 'comment']})
         ]
-    list_display = ['name', 'contact', 'phone', 'email', 'order_day']
-    
-'''    
-@admin.register(Fridge)
-class FridgeAdmin(admin.ModelAdmin):
-    fields = ['type', 'location', 'active']
-    list_display = ['type', 'location', 'active']
-    form = FridgeForm
-    
-@admin.register(Freezer)
-class FreezerAdmin(admin.ModelAdmin):
-    fields = ['type', 'location', 'active']
-    list_display = ['type', 'location', 'active']
-    display_radio=['active']
-    form = FreezerForm
-    
-@admin.register(FridgeTemp)
-class FridgeControl(admin.ModelAdmin):
-    fieldsets = [
-        (None,              {'fields': ['date', 'unit']}),
-        ('Temperaturer',    {'fields': ['measured']}),
-        ('Rengöring',      {'fields': ['cleaned']}),
-        ('Signering',       {'fields': ['signature']}),
-        ]
-    list_display = ['date', 'unit', 'signature', 'anomaly']
-    empty_value_display = 'Okänt'
-    form = FridgeControlForm
+    list_display = ['control_point', 'date', 'anomaly', 'signature']
     
     def save_model(self, request, obj, FridgeControlForm, change):
-        higher = obj.measured > obj.prescribedMaxTempFridge
-        lower = obj.measured < obj.prescribedMinTempFridge
-        if (higher or lower) and obj.measure == None:
-            raise ValidationError(
-                'Du har fyllt i en avvikelse utan att fylla i en åtgärd.')
+        higher = obj.measured > obj.control_point.prescribedMaxTemp
+        lower = obj.measured < obj.control_point.prescribedMinTemp
+
+        # Check for anomaly
         if higher or lower:
             obj.anomaly = True
-            obj.save()
         else:
             obj.anomaly = False   
-            obj.save()
-    
-@admin.register(FreezerTemp)
-class FreezerControl(admin.ModelAdmin):
-    AdminSite.site_title = 'Fryskontroll'
-    fieldsets = [
-        (None,              {'fields': ['date', 'unit']}),
-        ('Temperaturer',    {'fields': ['measured']}),
-        ('Rengöring',      {'fields': ['cleaned', 'defrosted'] }),
-        ('Signering',       {'fields': ['signature']}),
-        ]
-    list_display = ['date', 'unit', 'signature', 'anomaly']
-    form = FreezerControlForm
-    
-    def save_model(self, request, obj, FridgeControlForm, change):
-        higher = obj.measured > obj.prescribedMaxTempFreezer
-        lower = obj.measured < obj.prescribedMinTempFreezer
-        if (higher or lower) and obj.measure == None:
-            raise ValidationError(
-                'Du har fyllt i en avvikelse utan att fylla i en åtgärd.')
-        if higher or lower:
-            obj.anomaly = True
-            obj.save()
-        else:
-            obj.anomaly = False   
-            obj.save()
+        obj.save()
             
-'''
+@admin.register(Clean)
+class CleanAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,              {'fields': ['date', ]}),#'control_point'
+        ('Kontroll',        {'fields': ['cleaned', 'anomaly', 'measure']}),
+        #('Signering',       {'fields': ['signature', 'comment']})
+        ]
+    #list_display = ['control_point', 'date', 'anomaly', 'signature']
+    
+    
+@admin.register(FacilityDamage)
+class FacilityDamageAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,              {'fields': ['location', 'date' ]}),
+        ('Kontroll',        {'fields': ['description', 'measure']}),
+        ('Signering',       {'fields': ['repaired', 'signature', 'comment']})
+        ]
+    list_display = ['location', 'date', 'anomaly', 'signature']
+
+        
 @admin.register(Delivery)
 class DeliveryAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,              {'fields': ['supplier', 'date', 'created', 'updated']}),
-        ('Genomgång',       {'fields': ['damaged', 'expired']}),
+        (None,              {'fields': ['supplier', 'date']}),
+        ('Genomgång',       {'fields': ['smell', 'damaged', 'expired']}),
         ('Signering',       {'fields': ['signature']}),
         ]
-    readonly_fields = ['created', 'updated']
-    list_display = ['supplier', 'date', 'anomaly', 'signature', 'created', 'updated']
-    
+
+    list_display = ['supplier', 'date', 'anomaly', 'signature']
+
+    def save_model(self, request, obj, form, change):
+        if not obj.smell or not obj.damaged or not obj.expired:
+            obj.anomaly = True
+        else:
+            obj.anomaly = False
+        obj.save()
+        
 @admin.register(Allergen)
 class AllergenAdmin(admin.ModelAdmin):
     fieldsets = [
@@ -134,3 +186,11 @@ class ProductionAdmin(admin.ModelAdmin):
     
     list_filter = ['recepie', 'date', 'signature']
     
+@admin.register(Supplier)
+class SupplierAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,              {'fields': ['name', 'contact', 'phone', 'email']}),
+        ('Beställningar',   {'fields': ['order_day']}),
+        ('Beskrivning',     {'fields': ['description', 'goods', 'other']}),
+        ]
+    list_display = ['name', 'contact', 'phone', 'email', 'order_day']

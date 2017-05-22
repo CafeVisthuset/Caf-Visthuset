@@ -83,8 +83,8 @@ Day_Choices = [
     ]
 
 booking_status_codes = [
-    ('Cancelled', 'Avbokad'),
-    ('Active', 'Aktiv'),
-    ('completed', 'Genomförd'),
-    ('preliminary', 'Preliminär')
+    ('cancl', 'Avbokad'),
+    ('actv', 'Aktiv'),
+    ('cmplt', 'Genomförd'),
+    ('prel', 'Preliminär'),
     ]

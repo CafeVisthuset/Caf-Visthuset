@@ -73,16 +73,15 @@
 	        	
 	    	</div>
   		{% include 'navbar.html' %}
-  		
-
   		</header>
 		{% endblock %}
-	
     	<main>
     	{% block content %}
       		<section class="row">
-      			<h1 class="text-center">Välkommen, vad letar du efter?</h1>
+      			<h1 class="text-center text-info">Välkommen, vad letar du efter?</h1>
       			<div class="row">
+      			{% for link in links %}
+      			{% endfor %}
       			<a href="{% url 'meny' %}">
 					<div class="col-xs-12 col-md-4 img-hover">
 						<img class="img-responsive img-rounded" src="{% static 'img/coffeemaking.jpg' %}" alt="Kolla in vår dokumentation!" width="100%"/>
@@ -102,7 +101,8 @@
 					</div>
 				</a>
 				</div>
-				<h1 class="col-sm-12 text-center">Det här händer på Café Visthuset</h1>
+				
+				<h1 class="col-sm-12 text-center text-info">Det här händer på Café Visthuset</h1>
 				<div class="row">
 				{% for event in events %}
 				<a href="{% url 'events:event' %}">
@@ -110,7 +110,7 @@
 						<div class='imageholder'>
 				    	<img class="img-responsive img-rounded" src="{{ event.image.url }}" alt="{{ event.imageAlt }}" width="100%"/>
 						<div class='watermark'>
-							{{event.start_date|date:"d"}}<hr>{{event.start_date|date:"M"|localize}}</div>
+							{{event.start_date|date:"d"}}<hr>{{ event.start_date|date:"M"|localize }}</div>
 					</div>
 					<h3 top="100%">{{ event.title }}</h3>
 						<p>{{ event.description | safe}}</p><br>
@@ -121,7 +121,6 @@
 		</section>
 		{% endblock %}
     	</main>
-
     	{% include 'footer.html' %}
     </body>
 </html>

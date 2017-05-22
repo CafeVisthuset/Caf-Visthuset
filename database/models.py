@@ -66,6 +66,56 @@ class BikeManager(models.Manager):
         return super(BikeManager, self).adult_bikes().filter(
             Q(attribute='adult'))
 
+class BikeBookingManager(models.Manager):
+    """
+    Manager to handle all bike bookings.
+    
+    :: get_available
+    :: book_bike
+    :: unbook_bike
+    """
+    
+    def get_available(self, biketype, date_list):
+        '''
+        Method that takes a biketype and a date_list and returns
+        a list with all the bike objects that are available for 
+        the dates in the list.
+        '''
+        bikeset = self.filter(biketype)
+        bks = []
+        success_report = []
+        for bike in bikeset:
+            datelst = []
+            succs = []
+            # Iterate over the dates and find get the availability for the bike
+            # each date. Also get False success if the bike is not in BikeAvailable
+            # for that day.
+            for date in date_list:
+                avble, success = BikeAvailable.objects.bike_available_for_date(bike, date)
+                
+                datelst.append(avble)
+                succs.append(success)
+                
+            # Append reporting    
+            report = False in succs
+            success_report.append(report)
+            
+            # If all the dates are available, put the bike in the list to return  
+            if not False in datelst:
+                bks.append(bike)
+
+        return bks
+    
+    def book_bike(self, bike, date):
+        '''
+        Method that takes in a bike object and a date and book the bike
+        by setting the available False
+        '''
+        pass
+    
+    def unbook_bike(self, bike, date):
+        pass
+    
 # Bike model
 class Bike(models.Model):
     number = models.PositiveIntegerField(verbose_name= 'Nummer')
@@ -78,8 +128,8 @@ class Bike(models.Model):
     extra = models.CharField(choices=Bike_Extra_Choices, max_length= 15,
                              verbose_name='Knuten till tillbehör', blank=True)
     
-    #objects = models.Manager()
-    #bikes = BikeManager()
+    objects = models.Manager()
+    booking = BikeBookingManager()
     
     def __str__(self):
         attr = {
@@ -413,10 +463,9 @@ class Booking(models.Model):
     special_requests = models.TextField(max_length = 255, null=True, blank= True, verbose_name= 'övrigt')
     
     # Fields for preliminary bookings
-    preliminary = models.BooleanField(default=False, verbose_name='preliminär')
     longest_prel = models.DateTimeField(verbose_name='längsta preliminärbokning', null=True,
                                         validators= [validate_preliminary], blank=True)
-   
+    status = models.CharField(max_length=5, verbose_name='Status', choices=booking_status_codes)
     
     # Dates
     start_date = models.DateField(verbose_name='datum för avresa', null=True, validators=
@@ -506,12 +555,13 @@ class Booking(models.Model):
         list of the bikes that are booked. Otherwise return False and a
         list of the available bikes it found. 
         '''
-        bike_booking = self.booked_bike.create(from_date=start_date, to_date=end_date)
-        success = bike_booking.setBikes(bike_list, create_date_list(start_date, duration.days))
+        for bike in bike_list:
+            bike_booking = self.booked_bike.create(from_date=start_date, to_date=end_date)
+            success = bike_booking.setBikes(bike, create_date_list(start_date, duration.days))
         
-        # If bike_booking is not created
-        if bike_booking == None or not success:
-            return False, None
+            # If bike_booking is not created
+            if bike_booking == None or not success:
+                return False, None
         
         return True, bike_booking
 
@@ -570,11 +620,20 @@ class BikesBooking(models.Model):
         [BikeAvailable.objects.book_bike(
             bike=self.bike, date=date, booking=self) for date in date_list]
         '''
-    def setBikes(self, bike_list, date_list):
-        for bike in bike_list:
-            for date in date_list:
-                success = self.availableBike.book_bike(self, bike, date)
-                 
+        
+    def setBike(self, bike, date_list):
+        '''
+        Books a bike in BikeAvailable and assign the bike to self instance
+        
+        Used in:
+        setBikeBooking()
+        '''
+        for date in date_list:
+            success = self.availableBike.book_bike(self, bike, date)
+            if not success:
+                return success
+            
+        self.bike = bike
         return success
         
     '''
@@ -720,7 +779,25 @@ class BikeAvailableManager(models.Manager):
     def destroy_available_bike(self, bike, date):
         self.get(bike=bike, available_date=date).delete()
     
-    
+    def bike_available_for_date(self, bike, date):
+        """
+        Method that takes one bike and one date and returns the
+        BikeAvailable.available for that date, and a quality flag
+        that the bike is possible to book that day.
+        
+        Used in:
+        Bike.book.get_available()
+        """
+        success = False
+        avbl = False
+        try:
+            bk = self.get(bike=bike, available_date=date)
+            avbl = bk.available
+            success = True
+            return avbl, success
+        except:
+            return avbl, success
+            
     def bike_for_dates(self, bike, dates):
         '''
         Method that takes one bike and a list of dates as arguments. 
@@ -782,10 +859,9 @@ class BikeAvailableManager(models.Manager):
         Used in:
         BikesBooking.setBikes()
         '''
-        print(booking, type(bike), date.date())
         try:
             # Try to find the right BikeAvailable object
-            bk = BikeAvailable.objects.get(bike=bike, available_date=date.date())
+            bk = BikeAvailable.objects.get(bike=bike, available_date=date)
         except ObjectDoesNotExist:
             # If it does not exist, return False
             return False
@@ -800,12 +876,14 @@ class BikeAvailableManager(models.Manager):
         Unbooks the bike and saves the changes.
         
         Used in:
-        
+        Bookingadmin.cancel
         '''
         bk = BikeAvailable.objects.get(bike=bike, available_date=date.date())
+        print(bk)
         bk.available = True
         bk.bookings = None
         bk.save()
+        print(bk.available, bk.bookings)
                        
 # Availability for bikes
 class BikeAvailable(Available):

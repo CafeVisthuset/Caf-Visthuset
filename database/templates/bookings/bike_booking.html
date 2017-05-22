@@ -1,0 +1,54 @@
+{% extends '../visthuset_base.html' %}
+
+{% load rest_framework %}
+
+{% block title %}<title>{{ page.title }}</title>{% endblock %}
+
+{% block content %}
+
+<section class="row">
+	<div class="col-xs-11 col-md-7 col-offset-1 mt-0" >
+		<div class="text-info mt-0">
+			<h1 class="mt-0">{{ page.headline }}</h1>
+			{{ page.ingress | safe }}
+		</div>
+		{% for text in texts %}
+		<div class="text-info">
+			<h2>{{ text.headline }}</h2>
+			{% if text.image %}
+			<img class="img-responsive col-s-12 col-md-3" src="/{{ text.image }}" alt="{{ text.image_alt }}">
+			{% endif %}
+			<p>{{ text.text | safe }}</p>
+		</div>
+		<div class="embed-responsive embed-responsive-16by9">
+			<iframe class="embed-responsive-item" src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fcafevisthuset%2Fvideos%2F1296951783686704%2F&show_text=0&width=560" width="560" height="315" style="border:none;overflow:hidden" scrolling="no" allowTransparency="true" allowFullScreen="true"></iframe>
+		</div>
+	</div>
+	{% endfor %}
+
+	<div class="col-xs-11 col-md-4 col-offset-2 panel " style="padding-bottom: 5%;">
+		<p class="text-danger">{{ message }}</p>
+		<div class="panel-heading">
+		<h3 class="text-primary">Boka cykel här!</h3>
+		</div>
+		<form class="form-group panel-body" action="" method="post" >
+			{% csrf_token %}
+			{% for field in form %}
+			{% if form.errors %}
+		        <p class="text-danger">{{ field.errors }}</p>
+		    {% endif %}
+		        <label class="col-form-label" style="display:block;" for="{{ field.name }}">{{ field.label }}</label>
+		        {{ field }}
+		        {% if field.help_text %}
+		        <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+		        {% endif %}
+		    	
+			{% endfor %}
+			<br>
+			<input type="submit" class="btn btn-primary btn-block pull-right" value="Boka!"/>
+		</form>
+	</div>
+	</div>
+</section>
+{% endblock %}
+{% render_form serializer template_pack='rest_framework/vertical' %}

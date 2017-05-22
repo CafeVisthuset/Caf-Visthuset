@@ -158,7 +158,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-MEDIA_ROOT = 'VisthusetAPI-adrian/'
+MEDIA_ROOT = '../static/img'
 MEDIA_URL = '/'
 
 CKEDITOR_UPLOAD_PATH = "static/img/uploads/"

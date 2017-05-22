@@ -4,7 +4,8 @@ from Economy.models import Employee
 from cleaning.choices import Weekday_Choices
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.base import Model
+from django.core.exceptions import ObjectDoesNotExist
+from .validators import validateTemperatureAnomaly
 
 """
 TODO:
@@ -33,20 +34,22 @@ class Supplier(models.Model):
         return self.name
 
 class Routine(models.Model):
-    name = models.SlugField(max_length=25)
+    name = models.CharField(max_length=25)
     purpose = models.TextField(max_length=150)
     description = models.TextField(max_length=500)
     monitoring = models.TextField(max_length=500)
     anomaly_measure = models.TextField(max_length=150)
     anomaly_correction = models.TextField(max_length=150)
     
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name = 'rutin'
         verbose_name_plural = 'rutiner'
         ordering = ['name', '-updated']
+    def __str__(self):
+        return self.name
     
 FROM = [
     ('physical', 'Fysisk fara'),
@@ -61,20 +64,20 @@ HOW = [
     ('growth', 'Tillväxt'),
     ('survival', 'Överlevnad'),
     ]
+
 class Hazard(models.Model):
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
-    content_object = GenericForeignKey()
+    name = models.CharField(max_length=25)
     type = models.CharField(max_length=15, choices=FROM)
-    how = models.CharField(max_length=15)
+    how = models.CharField(max_length=15, choices=HOW)
     description = models.TextField(max_length=500)
-    routine = models.ForeignKey(
-        Routine,
-        on_delete=models.PROTECT,
-        blank=True
-        )
-    routine_sufficient = models.BooleanField(default = True)
     analysis = models.TextField(max_length=1000, verbose_name='faroanalys')
+    
+    class Meta:
+        verbose_name = 'Fara'
+        verbose_name_plural = 'Faror'
+        
+    def __str__(self):
+        return self.name
     
 RECCURRENCE = [
     ('yearly', 'Årligen'),
@@ -82,221 +85,187 @@ RECCURRENCE = [
     ('weekly', 'Veckovis'),
     ('2week', '2 ggr/vecka'),
     ('3week', '3 ggr/vecka'),
-    ('daily', 'dagligen'),
+    ('daily', 'Dagligen'),
+    ('always', 'Vid varje tillfälle')
     ]
 
-TYPES = [
-    ('coldstor', 'Kylförvaring'),
-    ('storage', 'Lagring'),
-    ('preparation', 'Beredning'),
-    ('serving', 'Servering'),
-    ]
 class ControlPoint(models.Model):
-    type = models.CharField(max_length=15, choices=TYPES, blank=False)
-    name = models.CharField(max_length=25)
-    location = models.CharField(max_length = 255)
-    short_description = models.TextField(max_length=255)
-    active = models.BooleanField(default=True)
-    hazard = GenericRelation(Hazard)
-    routine = models.ForeignKey(
-        Routine,
-        related_name='routine',
-        on_delete=models.PROTECT,
-        )
-    routine_recurr = models.CharField(max_length=15, choices=RECCURRENCE)
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
-    documentation = GenericForeignKey()
+    name = models.CharField(max_length=25, verbose_name='Namn')
+    location = models.CharField(max_length = 255, verbose_name='Plats')
+    short_description = models.TextField(max_length=255, verbose_name='Kort beskrivning')
+    active = models.BooleanField(default=True, verbose_name='Används den?')
+    hazard = models.ManyToManyField(Hazard)
     
-    created = models.DateField(auto_now_add=True, verbose_name='Skapad')
-    updated = models.DateField(auto_now = True, verbose_name='Uppdaterad')
-
-class ColdStorageManager(models.Manager):
-    def get_queryset(self):
-        return super(ColdStorageManager, self).get_queryset().filter(
-            type='coldstor')
-        
-    def create(self, **kwargs):
-        kwargs.update({'type':'coldstor'})
-        return super(StorageManager, self).create(**kwargs)
+    routine = models.ManyToManyField(Routine)
+    routine_recurr = models.CharField(max_length=15, choices=RECCURRENCE,
+                                      verbose_name='Hur ofta utförs rutinen?')
+    routine_sufficient = models.BooleanField(default=True)
     
-class ColdStorageExtra(models.Model):
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Skapad')
+    updated = models.DateTimeField(auto_now = True, verbose_name='Uppdaterad')
+    
     class Meta:
-        abstract = True
+        ordering = ['-active', '-updated']
         
+    def __str__(self):
+        return self.name
+
+def auto_increment():
+    try:
+        storage = ColdStorage.objects.latest('number')
+    except ObjectDoesNotExist:
+        storage = 0
+    return storage.number + 1
+
 class ColdStorage(ControlPoint):
+    number = models.PositiveIntegerField()#default=auto_increment)
     kind = models.CharField(max_length=15, 
+                            verbose_name='Typ',
                             choices=[('freeze', 'Frys'), ('fridge', 'kyl'), ('cool', 'sval')])
-    prescribedMaxTemp = models.IntegerField()
-    prescribedMinTemp = models.IntegerField()
+    prescribedMaxTemp = models.IntegerField(verbose_name='Maxtemperatur')
+    prescribedMinTemp = models.IntegerField(verbose_name='Minimumtemperatur')
     
-    objects = ColdStorageManager()
     class Meta:
-        proxy=True
-        verbose_name='kontrollpunk - Kylförvaring'
-        verbose_name_plural = 'kontrollpunkter - Kylförvaring'
+        verbose_name='kontrollpunk - Temperatur'
+        verbose_name_plural = 'kontrollpunkter - Temperatur'
         
-
-class StorageManager(models.Manager):
-    def get_queryset(self):
-        return super(StorageManager, self).get_queryset().filter(
-            type = 'storage')
+    def __str__(self):
+        return '{}. {}'.format(self.number, self.name)
         
-    def create(self, **kwargs):
-        kwargs.update({'type':'storage'})
-        return super(StorageManager, self).create(**kwargs)
-    
 class Storage(ControlPoint):
-    objects = StorageManager()
+
     class Meta:
         verbose_name='kontrollpunkt - Lagring'
         verbose_name_plural = 'kontrollpunkter - Lagring'
-        proxy = True
         
-class PreparationManager(models.Manager):
-    def get_queryset(self):
-        return super(PreparationManager, self).get_queryset().filter(
-            type='preparation')
-        
-    def create(self, **kwargs):
-        kwargs.update({'type':'preparation'})
-        return super(StorageManager, self).create(**kwargs)
-        
+
 class Preparation(ControlPoint):
-    objects = PreparationManager()
+
     class Meta:
-        proxy= True
         verbose_name='kontrollpunk - Beredning'
         verbose_name_plural='kontrollpunkter - Beredning'
-        ordering = ['-active', '-updated']
 
-class ServingManager(models.Manager):
-    def get_queryset(self):
-        return super(ServingManager, self).get_queryset().filter(
-            type = 'serving')
-        
-    def create(self, **kwargs):
-        kwargs.update({'type':'serving'})
-        return super(StorageManager, self).create(**kwargs)
-    
 class Serving(ControlPoint):
-    objects = ServingManager()
+
     class Meta:
-        proxy=True
         verbose_name='kontrollpunkt - Servering'
         verbose_name_plural='kontrollpunkter - Servering'
-        
-class CriticalControlPointManager(models.Manager):
-    def get_queryset(self):
-        return super(CriticalControlPointManager, self).get_queryset().filter(
-            hazard__routine_sufficient = False) 
-        
+
 class CriticalControlPoint(ControlPoint):
-    upper_limit = models.CharField(max_length=100)
-    lower_limit = models.CharField(max_length=100)
-    extra_monitoring = models.TextField(max_length=500)
-    
-    objects = CriticalControlPointManager()
+    upper_limit = models.CharField(max_length=100, verbose_name='Övre gräns')
+    lower_limit = models.CharField(max_length=100, verbose_name='Nedre gräns')
+    extra_monitoring = models.TextField(max_length=500, verbose_name='Extra övervakning')
+
     class Meta:
-        proxy = True
-        
+        verbose_name='kritisk kontrollpunkt'
+        verbose_name_plural='kritiska kontrollpunkter'
+   
 class Documentation(models.Model):
-    control_point = GenericRelation(ControlPoint)
-    date = models.DateField(default=date.today)
-    anomaly = models.BooleanField(default=False, verbose_name='avvikelse')
-    measure = models.CharField(blank=True, max_length=100, verbose_name='åtgärd',
+    date = models.DateField(default=date.today, verbose_name='Datum')
+    anomaly = models.BooleanField(default=False, verbose_name='Avvikelse')
+    measure = models.CharField(blank=True, max_length=100, verbose_name='Åtgärd',
         help_text='Vilken åtgärd har tagits?')
-    signature = models.ForeignKey(
-        Employee, 
-        on_delete=models.PROTECT,
-        related_name='signature',
-        )
     
     comment = models.TextField(max_length=255, blank=True, verbose_name='kommentar')
     
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     
-    
-    def open_visthuset(self):
-        if not self.open:
-            self.open = True
-            return self.open
-        else:
-            self.open = False
-        return self.open
-    
-    
+    class Meta:
+        abstract = True
+        
 class Temperature(Documentation):
+    control_point = models.ForeignKey(
+        ColdStorage,
+        on_delete=models.PROTECT,
+        verbose_name='Kontrollpunkt'
+        )
     measured = models.IntegerField(verbose_name='Uppmätt temperatur')
-    defrosted = models.BooleanField(default=False, verbose_name='Avfrostad')
-    
+    signature = models.ForeignKey(
+        Employee, 
+        on_delete=models.PROTECT,
+        verbose_name='signatur',
+        )
     class Meta:
         verbose_name = 'dokumentera temperatur'
         verbose_name_plural = 'dokumentera temperaturer'
-
-    '''
-    TODO:
-    # Funktion för att sätta anomaly på denna
-    
-    '''
-class Clean(Documentation):
-    clean = models.BooleanField(default=False)
-
-    class Meta:
-        app_label = 'dokumentation'
-        verbose_name = 'städning'
-        verbose_name_plural = 'städning'
         ordering = ['date']
-    
+
+   
+class Clean(Documentation):
+    control_point = models.ForeignKey(
+        ControlPoint,
+        on_delete=models.PROTECT,
+        verbose_name='Kontrollpunkt'
+        )
+    cleaned = models.BooleanField(default=False, verbose_name='Städat?')
+    signature = models.ForeignKey(
+        Employee, 
+        on_delete=models.PROTECT,
+        verbose_name='signatur',
+        )
+    class Meta:
+        verbose_name = 'Dokumentera städning'
+        verbose_name_plural = 'Dokumentera städning'
+        
     def save(self):
-        if not self.clean:
+        if not self.cleaned:
             self.anomaly = True
-        self.save()
+
         
 
 class Delivery(Documentation):
     supplier = models.ForeignKey(
         Supplier,
+        verbose_name='Leverantör',
         on_delete=models.PROTECT,
         null=True,
         )
-    smell = models.BooleanField(default=True)
-    damaged = models.BooleanField(default=False)
-    expired = models.BooleanField(default=False)
-
+    smell = models.BooleanField(default=True, verbose_name='Lukt ok?')
+    damaged = models.BooleanField(default=False, verbose_name='Förpackning ok?')
+    expired = models.BooleanField(default=False, verbose_name='Datum ok?')
+    signature = models.ForeignKey(
+        Employee, 
+        on_delete=models.PROTECT,
+        verbose_name='signatur',
+        )
     class Meta:
-        verbose_name = 'leverans'
-        verbose_name_plural = 'leveranser'
+        verbose_name = 'Dokumentera leverans'
+        verbose_name_plural = 'Dokumentera leveranser'
         ordering = ['date']
 
     def __str__(self):
         return '{}, {}'.format(self.supplier, self.date)
 
-    def save(self):
-        if self.damaged or self.expired or not self.smell:
-            self.anomaly = True
-        self.save()   
-    
+
 class FacilityDamage(Documentation):
-    repaired = models.BooleanField(default=False)
-    localtion = models.TextField(max_length=100)
-    description = models.TextField(max_length=500)
+    repaired = models.BooleanField(default=False, verbose_name='Reparerad?')
+    location = models.TextField(max_length=100, verbose_name='Plats')
+    description = models.TextField(max_length=500, verbose_name='Beskrivning')
+    signature = models.ForeignKey(
+        Employee, 
+        on_delete=models.PROTECT,
+        verbose_name='signatur',
+        )
     
     class Meta:
-        verbose_name = 'fastighetsskada'
-        verbose_name_plural = 'fastighetsskador'
-        ordering = ['-anomaly', '-date']
+        verbose_name = 'Dokumentera fastighetsskada'
+        verbose_name_plural = 'Dokumentera fastighetsskador'
+        ordering = ['-date']
     
-    def save(self):
-        if not self.repaired:
-            self.anomaly = True
-        self.save()    
         
+  
+
 class Allergen(models.Model):
-    name = models.CharField(max_length=30)
-    description = models.TextField(max_length=200, blank=True)
-    hazard = GenericRelation(Hazard)
+    name = models.CharField(max_length=30, verbose_name='Namn')
+    description = models.TextField(max_length=200, blank=True, verbose_name='Beskrivning',
+                                   help_text = """Kort beskrivning om allergenen, hur sprids den?
+                                   Vart finns den? Vilka besvär skapar den?""")
+    hazard = models.ForeignKey(
+        Hazard,
+        on_delete=models.PROTECT,
+        verbose_name='Fara'
+        )
     
     class Meta:
         verbose_name = 'allergen'
@@ -383,7 +352,7 @@ class Production(models.Model):
     signature = models.ForeignKey(
         Employee,
         on_delete=models.PROTECT,
-        related_name='signature',
+        related_name='employee',
         verbose_name='signatur'
         )
     

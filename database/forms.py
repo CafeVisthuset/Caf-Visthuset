@@ -9,11 +9,12 @@ from database.models import BikeExtra, Bike, LunchBooking, BikesBooking,\
     BikeAvailable
 from .choices import Lunch_Choices, Action_Choices, YEARS, MONTHS
 from django.forms.formsets import BaseFormSet
-from django.forms.widgets import SelectDateWidget
+from django.forms.widgets import SelectDateWidget, Select
 from datetime import timedelta, date, datetime
 from database.helperfunctions import date_list_in_bike_list
 from database.validators import positive_integer
 from database.choices import Day_Choices
+from random import choice
 
 
 '''
@@ -153,38 +154,52 @@ class CustomerBikeBookingForm(forms.Form):
                                  initial=date.today(),
                                  widget=forms.SelectDateWidget(
                                      years=[date.today().year],
-                                     attrs={'class':'col-form-label'}))
-    duration = forms.ChoiceField(label='Antal dagar', choices=Day_Choices, required=True)
+                                     attrs={'class':'form-control',
+                                            'style':'width:32.5%; display:inline-block;'}))
+    duration = forms.DurationField(label='Antal dagar', initial=1, required=True,
+                                   widget=Select(attrs={'class': 'form-control'},
+                                                 choices=Day_Choices))
     
     # Bikes and extras
-    adult_bikes = forms.ChoiceField(label='Antal vuxencyklar',
-        initial=2,
-        choices=[(number, '%s' % (number)) for number in range(0,21)])
-    young_bikes = forms.ChoiceField(label='Antal ungdomscyklar(12-16 år)',
-        initial=0,
-        choices=[(number, '%s' % (number)) for number in range(0,4)])
-    child_bikes = forms.ChoiceField(label='Antal barncyklar(9-12 år)',
-        initial=0,
-        choices=[(number, '%s' % (number)) for number in range(0,4)])
-    small_child_bikes = forms.ChoiceField(label='antal småbarncyklar (6-9 år)',
-        initial=0,
-        choices=[(number, '%s' % (number)) for number in range(0,4)])
+    adult_bikes = forms.IntegerField(label='Antal vuxencyklar',
+        initial=2, widget=forms.Select(attrs={'class':'form-control'},
+        choices=[(number, '%s' % (number)) for number in range(0,21)]))
+    young_bikes = forms.IntegerField(label='Antal ungdomscyklar(12-16 år)',
+        initial=0, widget=forms.Select(attrs={'class':'form-control'},
+        choices=[(number, '%s' % (number)) for number in range(0,4)]))
+    child_bikes = forms.IntegerField(label='Antal barncyklar(9-12 år)',
+        initial=0, widget=forms.Select(attrs={'class':'form-control'},
+        choices=[(number, '%s' % (number)) for number in range(0,4)]))
+    small_child_bikes = forms.IntegerField(label='Antal småbarncyklar (6-9 år)',
+        initial=0, widget=forms.Select(attrs={'class':'form-control'},
+        choices=[(number, '%s' % (number)) for number in range(0,4)]))
     #number_extras = forms.MultipleChoiceField(
     #    choices=BikeExtra.objects.all())
     
     # Lunches
-    number_veg_lunches = forms.IntegerField(validators=[positive_integer])
-    number_meat_lunches = forms.IntegerField(validators=[positive_integer])
-    number_fish_lunches = forms.IntegerField(validators=[positive_integer])
+    veg_lunch = forms.IntegerField(initial=0, validators=[positive_integer],
+                                   label='Vegetarisk', 
+                                   widget=forms.NumberInput(attrs={'class':'form-control'}))
+    meat_lunch = forms.IntegerField(initial=0, validators=[positive_integer],
+                                    label='Kallskuret',
+                                    widget=forms.NumberInput(attrs={'class':'form-control'}))
+    fish_lunch = forms.IntegerField(initial=0, validators=[positive_integer],
+                                    label='Fisk',
+                                    widget=forms.NumberInput(attrs={'class':'form-control'}))
     
     # Guest info
-    first_name = forms.CharField(max_length=25, label='Förnamn', required=True)
-    last_name = forms.CharField(label='Efternamn', max_length=25)
-    phone_number = forms.CharField(max_length=25, required=False, label='Telefon')
-    email = forms.EmailField(label='Epost')
+    first_name = forms.CharField(max_length=25, label='Förnamn', required=True,
+                                 widget=forms.TextInput(attrs={'class':'form-control'}))
+    last_name = forms.CharField(label='Efternamn', max_length=25,
+                                widget=forms.TextInput(attrs={'class':'form-control'}))
+    phone_number = forms.CharField(max_length=25, required=False, label='Telefon',
+                                   widget=forms.TextInput(attrs={'class':'form-control'}))
+    email = forms.EmailField(label='Epost', widget=forms.EmailInput(attrs={'class':'form-control'}))
     newsletter = forms.BooleanField(
+        label='Nyhetsbrev',
         initial = True,
         help_text= 'Vill du ha nyheter och erbjudanden från oss?')
     
     # Extra message
-    other = forms.CharField(widget=forms.Textarea, max_length=200, required=False)
+    other = forms.CharField(widget=forms.Textarea(attrs={'class':'form-control'}), max_length=200,
+                            required=False, label='Övrig informatio, t.ex. allergier')

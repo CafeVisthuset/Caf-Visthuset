@@ -10,6 +10,7 @@ from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+from database.helperfunctions import create_date_list
 
 
 
@@ -145,22 +146,24 @@ class LunchBookingInLine(admin.TabularInline):
     form = LunchBookingForm
     readonly_fields = ['subtotal']
 
-    
+
+        
 @admin.register(Booking)
 class BookingsAdmin(admin.ModelAdmin):
     
     fieldsets = [
-        (None,          {'fields': ['guest', 'booking', 'created_at', 'updated_at']}),
+        (None,          {'fields': ['guest', 'booking', 'status', 'created_at', 'updated_at']}),
         ('Info om gästen', {'fields': ['adults', 'children', 'discount_code']}),
         ('Specifikationer', {'fields': ['total', 'booked_bike_report', 'booked_room_report',
                                         'booked_lunch_report']}),
         ]
-    list_display = ['booking', 'guest', 'total', 'created_at', 'updated_at','adults', 'children']
+    list_display = ['booking', 'status', 'guest', 'total', 'created_at', 'updated_at','adults', 'children']
     readonly_fields = ['booking', 'created_at', 'updated_at', 'booked_bike_report', 'booked_room_report',
-                       'booked_lunch_report', 'total']
-    
-    
+                       'booked_lunch_report', 'total', 'status']
+    actions = ['cancel_booking', 'preliminary', 'make_active', 'complete']
+
     inlines = [BikesBookingInLine, RoomsBookingInLine, LunchBookingInLine]
+    
     def booked_bike_report(self, instance):
         return format_html_join(mark_safe('<br/>'),
                                 'Typ: {}cykel, Nummer: {}',
@@ -185,6 +188,18 @@ class BookingsAdmin(admin.ModelAdmin):
                                 )
     booked_lunch_report.short_description = 'Luncher för denna bokning'
     
+    def cancel_booking(self, request, queryset):
+        for item in queryset:
+            bk_books = BikesBooking.objects.filter(booking=item.booking)
+            for bk in bk_books:
+                duration = bk.to_date - bk.from_date
+                for date in create_date_list(bk.from_date, duration.days+1):
+                    print(date, bk.bike)
+                    BikeAvailable.objects.unbook_bike(bk.bike, date)
+                bk.bike = None
+                bk.save()
+        queryset.update(status='cancl')
+    cancel_booking.short_description = 'Avboka'
     
 @admin.register(BikesBooking)
 class BikesBookingAdmin(admin.ModelAdmin):
@@ -198,6 +213,8 @@ class BikesBookingAdmin(admin.ModelAdmin):
         # Gör funktion som hämtar alla lediga cyklar
         pass
 
+    
+        
 @admin.register(RoomsBooking)
 class RoomsBookingAdmin(admin.ModelAdmin):
     fieldsets = [

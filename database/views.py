@@ -107,17 +107,17 @@ def create_available_bikes(request):
                    })
 
 
-def book_bike_view(request):
-    if request.method == 'POST':
-        form = BookingForm(request.POST)
-        data = form.cleaned_data
-        print(data)
-        response_data = data
-        return render(request, 'bookings/test.html', {'data': response_data})
-    else:
-        response_data = 'get' #BikeAvailable.objects.all()
-        form = BookingForm
-    return render(request, 'bookings/booking.html',{'message': response_data, 'form': form})
+#def book_bike_view(request):
+#    if request.method == 'POST':
+#        form = BookingForm(request.POST)
+#        data = form.cleaned_data
+#        print(data)
+#        response_data = data
+#        return render(request, 'bookings/test.html', {'data': response_data})
+#    else:
+#        response_data = 'get' #BikeAvailable.objects.all()
+#        form = BookingForm
+#    return render(request, 'bookings/bike_booking.html',{'message': response_data, 'form': form})
 
 class BikeBookingResponseView(APIView):
     '''
@@ -247,8 +247,13 @@ class BikeBookingResponseView(APIView):
 
             # Book bikes
             success, bike_booking = booking.setBikeBooking(bike_list, start_date, end_date, duration)
-        
+            
+            # Should not happen
             if not success:
+                '''
+                TODO:
+                # Implement report if something goes wrong and send an email to us. 
+                '''
                 return render(request, 'failed.html')
             
             # Book extras
@@ -278,58 +283,133 @@ class BikeBookingResponseView(APIView):
                          'message': 'Alla fält måste vara korrekt ifyllda!'})
 
 def customer_bike_booking_view(request):
-    if request.method == 'POST':
-        form = CustomerBikeBookingForm(request.POST)
-        if form.is_valid():
-            print(form)
-            pass
-    
-    else:
-        form = CustomerBikeBookingForm()
-        
+    # Get page text data from database
     pagename = 'uthyrning'
     page = Page.objects.get(name=pagename)
     texts = PageContent.objects.filter(page__name = pagename, publish=True).order_by('order')
-    return render(request, 'bookings/booking.html', {'form': form, 'page':page, 'texts':texts})  
+    
+    # Form data and handling
+    if request.method == 'POST':
+        form = CustomerBikeBookingForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            # Time variables
+            start_date = data['start_date']
+            duration = data['duration']
+            print(duration, type(duration))
+            end_date = start_date + duration - timedelta(days=1)
+            date_list = create_date_list(start_date, duration.days)
+            
+            # Build bike dictionary
+            bikes = {'adult': data['adult_bikes'], 'young': data['young_bikes'], 
+                     'child': data['child_bikes'], 'smallChild': data['small_child_bikes']}
+            
+            # Count number of bikes
+            number_of_adults = data['adult_bikes']
+            number_of_children = (int(data['small_child_bikes']) + int(data['child_bikes']) + 
+                                  int(data['young_bikes']))
+            # Messages
+            biketype_dict = {'adult': 'vuxencykel', 'young': 'ungdomscykel', 'child': 'barncykel',
+                    'smallChild': 'småbarncykel'}
+            
+            bike_list = []
+            for biketype, amount in bikes.items():
+                if amount is not None and amount > 0:
+                    success, list = (BikeAvailable.objects.
+                                            get_available_bikes_for_dates(biketype,
+                                                                          amount,
+                                                                          start_date,
+                                                                          end_date,
+                                                                          duration))
+                    if success:
+                        bike_list += list
+                    else:
+                        return render(request, 'bookings/bike_booking.html', {'form': form,
+                                                                              'page': page,
+                                                                              'texts': texts,
+                                                                              'message': mark_safe('''
+                                         Det verkar som att vi inte har tillräckligt många {} lediga<br>
+                                         för en eller flera av de önskade dagarna. Ring oss gärna på<br>
+                                         0506 - 77 75 50 eller skicka ett mejl till <a href="mailto:info@cafevisthuset.se">
+                                         info@cafevisthuset.se</a> så kanske vi kan hjälpa till.
+                                         '''.format(biketype_dict[biketype]))})
+                    
+                
+            print(bike_list)
+            # Get or create guest
+            guest = Guest.objects.post_get_or_create(data['first_name'],
+                                                     data['last_name'],
+                                                     data['email'],
+                                                     kwargs={'phone_number': data['phone_number'],
+                                                             'newsletter': data['newsletter']})
+            # Create booking
+            booking = Booking.book.create_booking(guest=guest,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  adults=number_of_adults,
+                                                  children=number_of_children, 
+                                                  special_requests=data['other'])
+            # Book bikes
+            # bike booking not used, but can be used for debugging
+            success, bike_booking = booking.setBikeBooking(bike_list, start_date, end_date, duration)
+            
+            # Should not happen
+            if not success:
+                '''
+                TODO:
+                # Implement report if something goes wrong and send an email to us. 
+                '''
+                return render(request, 'failed.html')
+            
+            # Book extras
+            
+            
+            
+            # Build lunch dictionary
+            lunches = {'vegetarian': data['veg_lunch'], 'fish': data['fish_lunch'], 'meat': data['meat_lunch']}
+            # Book lunches
+            for lunchtype, amount in lunches.items():
+                if amount > 0:
+                    LunchBooking.objects.create(
+                            type=Lunch.objects.get(type=lunchtype), 
+                            day=start_date,
+                            quantity=amount,
+                            booking=booking)
+            
+            # Saves the booking and updates prices
+            booking.save()
+            return redirect('database:confirmation', pk = booking.booking)
+            
+    else:
+        form = CustomerBikeBookingForm()
+        
+    return render(request, 'bookings/bike_booking.html', {'form': form, 'page':page, 'texts':texts})  
       
-def confirmation_view(request, pk):
-    included = {}
+def confirmation_view(request, pk):    
     booking = Booking.objects.get(booking=pk)
-    first_name = booking.guest.first_name
     start_date = booking.start_date
     end_date = booking.end_date
     duration = end_date - start_date
     
-    if booking.booked_bike is not None:
-        included['bikes'] = booking.booked_bike
-        
-    if booking.booked_lunches is not None:
-        included['lunches'] = booking.booked_lunches
-    
-    message = mark_safe(
-    ''' <h1>Tack {0} för din bokning!</h1><br>
-    <br>
-    Vi har skickat en bekräftelse till din epostadress.<br>
-    <br>        
-    Startdag: {1} <br>
-    Antal dagar {2} <br>
-    Antal vuxna {3} <br>
-    Antal barn {4} <br>
-    <br>
-    I din bokning ingår följande:
-    '''.format(booking.guest.first_name, booking.start_date.strftime('%d %B %Y'), duration, booking.adults, booking.children))
-    
     # What to send back to the view        
-    c = Context({'booking_number': booking,
+    c = Context({'booking_number': booking.booking,
         'first_name': booking.guest.first_name,
-        'message': message,
         'start_date': start_date,
-        'duration': duration,
+        'duration': int(duration.days),
         'adults': booking.adults,
         'children': booking.children,
         'included_bikes': booking.booked_bike,
         'includes_lunches': booking.booked_lunches,
         'email': booking.guest.email})
+    
+    # Page texts
+    pagename ='bikeconf'
+    page = Page.objects.get(name=pagename)
+    texts = (PageContent.objects.filter(page__name=pagename, publish=True).exclude(shortname='Cykelbekräftelse')
+             .order_by('order'))
+    conf = Template(PageContent.objects.get(shortname='Cykelbekräftelse').text)
+    ingress = Template(page.ingress)
+    headline = Template(page.headline)
     
     # Email stuff
     obj = EmailTexts.objects.get(name='CykelTack')
@@ -340,7 +420,10 @@ def confirmation_view(request, pk):
     send_mail(obj.title, plain_text.render(c), 'boka@cafevisthuset.se',
                                 [booking.guest.email], ['boka@cafevisthuset.se'],
                                 html_message=html_content.render(c))
-
     
-    return render(request, 'bookings/confirmation.html', c)
+    return render(request, 'bookings/confirmation.html', {'page': page,
+                                                          'headline': headline.render(c),
+                                                          'ingress': ingress.render(c),
+                                                          'confirmation': conf.render(c),
+                                                          'texts': texts,})
 
