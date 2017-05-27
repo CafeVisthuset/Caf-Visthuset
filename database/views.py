@@ -333,9 +333,6 @@ def customer_bike_booking_view(request):
                                          0506 - 77 75 50 eller skicka ett mejl till <a href="mailto:info@cafevisthuset.se">
                                          info@cafevisthuset.se</a> så kanske vi kan hjälpa till.
                                          '''.format(biketype_dict[biketype]))})
-                    
-                
-            print(bike_list)
             # Get or create guest
             guest = Guest.objects.post_get_or_create(data['first_name'],
                                                      data['last_name'],

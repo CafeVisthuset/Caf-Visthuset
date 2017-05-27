@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from database.helperfunctions import create_date_list
-
+from datetime import timedelta, date
 
 
 # register bikes for users
@@ -113,17 +113,10 @@ Admins for Lunch and Utilities
 @admin.register(Lunch)
 class LunchAdmin(admin.ModelAdmin):
     fields = ['type', 'price' ,'slug'] 
-
-
-
 '''
-Booking admins
-
-TODO:
-# Gör funktion för att räkna ut totalpris
-# Gör totalpris till readonly
-# Beräkna subtotal i varje bokningsmodell
-
+Booking admin
+Huvudadminen BookingAdmin som enbart är tänkt att användas. Alla andra typer av bokningar
+sker genom inlines i denna.
 '''    
 # Inlines
 class RoomsBookingInLine(admin.TabularInline):
@@ -150,16 +143,15 @@ class LunchBookingInLine(admin.TabularInline):
         
 @admin.register(Booking)
 class BookingsAdmin(admin.ModelAdmin):
-    
     fieldsets = [
-        (None,          {'fields': ['guest', 'booking', 'status', 'created_at', 'updated_at']}),
+        (None,          {'fields': ['guest', 'booking', 'status', 'longest_prel', 'created_at', 'updated_at']}),
         ('Info om gästen', {'fields': ['adults', 'children', 'discount_code']}),
         ('Specifikationer', {'fields': ['total', 'booked_bike_report', 'booked_room_report',
                                         'booked_lunch_report']}),
         ]
     list_display = ['booking', 'status', 'guest', 'total', 'created_at', 'updated_at','adults', 'children']
     readonly_fields = ['booking', 'created_at', 'updated_at', 'booked_bike_report', 'booked_room_report',
-                       'booked_lunch_report', 'total', 'status']
+                       'booked_lunch_report', 'total', 'status', 'longest_prel']
     actions = ['cancel_booking', 'preliminary', 'make_active', 'complete']
 
     inlines = [BikesBookingInLine, RoomsBookingInLine, LunchBookingInLine]
@@ -193,28 +185,31 @@ class BookingsAdmin(admin.ModelAdmin):
             bk_books = BikesBooking.objects.filter(booking=item.booking)
             for bk in bk_books:
                 duration = bk.to_date - bk.from_date
-                for date in create_date_list(bk.from_date, duration.days+1):
-                    print(date, bk.bike)
-                    BikeAvailable.objects.unbook_bike(bk.bike, date)
+                for day in create_date_list(bk.from_date, duration.days+1):
+                    BikeAvailable.objects.unbook_bike(bk.bike, day)
                 bk.bike = None
                 bk.save()
         queryset.update(status='cancl')
     cancel_booking.short_description = 'Avboka'
     
-@admin.register(BikesBooking)
-class BikesBookingAdmin(admin.ModelAdmin):
-    form_class = BikeBookingForm
-    #fieldsets = [
-    #    (None,         {'fields': ['booking', ]}),
-    #    ('Pris',        {'fields': ['subtotal']}),
-    #    ]
+    def preliminary(self, request, queryset):
+        for item in queryset:
+            item.longest_prel = item.start_date - timedelta(days=1)
+            item.save()
+        queryset.update(status = 'prel')
+    preliminary.short_description = 'Gör till preliminärbokning'
     
-    def available_bikes(self, instance):
-        # Gör funktion som hämtar alla lediga cyklar
-        pass
+    def make_active(self, request, queryset):
+        queryset.update(status='actv')
+    make_active.short_description = 'Gör aktiv'
+    
+    def complete(self, request, queryset):
+        '''
+        Potentiell hook för att bygga på utvärdering från gästerna.
+        '''
+        queryset.update(status='cmplt')
+    complete.short_description = 'Markera som genomförd'
 
-    
-        
 @admin.register(RoomsBooking)
 class RoomsBookingAdmin(admin.ModelAdmin):
     fieldsets = [
@@ -260,6 +255,7 @@ class GuestAdmin(StaffAdmin):
     readonly_fields = ['last_login', 'date_joined']
     list_display = ['username', 'first_name', 'last_name', 'phone_number', 'newsletter']
 
+admin.site.disable_action('delete_selected')
 admin.site.unregister(User)
 admin.site.register(Employee, StaffAdmin)
 admin.site.register(Guest, GuestAdmin)

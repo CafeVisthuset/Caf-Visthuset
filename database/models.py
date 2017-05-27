@@ -434,6 +434,7 @@ class BookingManager(models.Manager):
                               end_date=end_date,
                               adults=adults,
                               children=children,
+                              status='actv',
                               special_requests=special_requests)
         
     def update_booking(self, booking_number, **kwargs):
@@ -556,14 +557,22 @@ class Booking(models.Model):
         list of the available bikes it found. 
         '''
         for bike in bike_list:
-            bike_booking = self.booked_bike.create(from_date=start_date, to_date=end_date)
-            success = bike_booking.setBikes(bike, create_date_list(start_date, duration.days))
+            bike_booking = self.booked_bike.create(from_date=start_date, to_date=end_date, bike=bike)
+            success = bike_booking.setBike(bike, create_date_list(start_date, duration.days))
         
             # If bike_booking is not created
             if bike_booking == None or not success:
                 return False, None
         
         return True, bike_booking
+    
+    def destroyBikeBooking(self, bike, from_date, to_date):
+        duration = to_date - from_date
+        datelist = create_date_list(from_date, duration.days)
+        for date in datelist:
+            print(type(date))
+            BikeAvailable.objects.unbook_bike(bike, date)
+            
 
     def setBikeExtraBooking(self, **kwargs):
         pass
@@ -573,8 +582,7 @@ class Booking(models.Model):
     
     def setAccomodationBooking(self, **kwargs):
         pass
-    
-        
+
 class BikesBooking(models.Model):
     # Dates and time
     from_date = models.DateTimeField()
@@ -588,13 +596,13 @@ class BikesBooking(models.Model):
     bike = models.ForeignKey(Bike,
         related_name='bike',
         null = True,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         blank=True
         )
     booking = models.ForeignKey(
         Booking,
         related_name='booked_bike',
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         db_index = True,
         )
     
@@ -827,7 +835,6 @@ class BikeAvailableManager(models.Manager):
             duration = end_date - start_date
         
         date_list = create_date_list(start_date, duration.days)
-        print(date_list)
         available_bike_list =[]
         bikes = Bike.objects.filter(attribute=attr)
         # Check in order if the bikes are available during the dates
@@ -878,7 +885,7 @@ class BikeAvailableManager(models.Manager):
         Used in:
         Bookingadmin.cancel
         '''
-        bk = BikeAvailable.objects.get(bike=bike, available_date=date.date())
+        bk = BikeAvailable.objects.get(bike=bike, available_date=date)
         print(bk)
         bk.available = True
         bk.bookings = None
