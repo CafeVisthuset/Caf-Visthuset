@@ -1,0 +1,28 @@
+{% extends '../visthuset_base.html' %}
+
+{% block title %}<title>{{ package.title }}</title>{% end block %}
+
+{% block content %}
+	<div class="col-xs-11 col-md-4 col-offset-2 panel " style="padding-bottom: 5%;">
+		<p class="text-danger">{{ message }}</p>
+		<div class="panel-heading">
+		<h3 class="text-primary">Boka cykel här!</h3>
+		</div>
+		<form class="form-group panel-body" action="" method="post" >
+			{% csrf_token %}
+			{% for field in form %}
+			{% if form.errors %}
+		        <p class="text-danger">{{ field.errors }}</p>
+		    {% endif %}
+		        <label class="col-form-label" style="display:block;" for="{{ field.name }}">{{ field.label }}</label>
+		        {{ field }}
+		        {% if field.help_text %}
+		        <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+		        {% endif %}
+		    	
+			{% endfor %}
+			<br>
+			<input type="submit" class="btn btn-primary btn-block pull-right" value="Boka!"/>
+		</form>
+	</div>
+{% end block content %}

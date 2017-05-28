@@ -9,13 +9,14 @@
 		{{ page.ingress | safe }}
 	</div>
 	{% for package in packages %}
-	<div class="col-s-12 col-md-5">
-		<h2>{{ package.text.name }}</h2>
+	<div class="col-s-12 col-md-6">
+		<h2 class='text-info'>{{ package.title }}</h2>
 		{% if package.image %}
 		<img class="img-responsive col-s-12 col-md-3" src="/{{ package.image }}" alt="{{ package.image_alt }}">
 		{% endif %}
 		{% for day in package.days %}
-		<p>{{ day.text | safe }}</p>
+		<p class='text-info'>{{ day.ingress | safe }}</p>
+		<a src="{% url 'package_booking' package.slug %}" class='btn btn-primary'>Läs mer och boka!!</a>
 		{% endfor %}
 	</div>
 	{% endfor %}

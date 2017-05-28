@@ -113,6 +113,7 @@ Admins for Lunch and Utilities
 @admin.register(Lunch)
 class LunchAdmin(admin.ModelAdmin):
     fields = ['type', 'price' ,'slug'] 
+    
 '''
 Booking admin
 Huvudadminen BookingAdmin som enbart är tänkt att användas. Alla andra typer av bokningar
@@ -124,9 +125,7 @@ class RoomsBookingInLine(admin.TabularInline):
     extra = 1
     fields = ['numberOfGuests', 'from_date', 'to_date', 'room', 'subtotal']
     readonly_fields = ['subtotal']
-    
-
-    
+        
 class BikesBookingInLine(admin.TabularInline):
     model = BikesBooking
     form = BikeBookingForm
@@ -220,13 +219,6 @@ class RoomsBookingAdmin(admin.ModelAdmin):
     list_display = ['booking', 'numberOfGuests', 'room', 'subtotal','from_date', 'to_date']
     readonly_fields = ['subtotal']
     
-    
-@admin.register(LunchBooking)
-class LunchBooking(admin.ModelAdmin):
-    form_class = LunchBookingForm
-    #fields = ['quantity', 'subtotal']
-
-
 '''
 Staff and guest admins. Belongs to auth app.
 '''

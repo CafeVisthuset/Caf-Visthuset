@@ -33,6 +33,10 @@ class BikeExtraForm(forms.ModelForm):
         model = BikeExtra
         fields = ['name', 'number']
 
+class AdminBikeBookingForm(forms.ModelForm):
+    class Meta:
+        model = BikesBooking
+        fields = ['bike', 'from_date', 'to_date', ]
 class BikeBookingForm(forms.ModelForm):
     '''
     Booking form for BikeBooking inline in Admin

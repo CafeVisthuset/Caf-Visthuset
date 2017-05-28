@@ -9,24 +9,31 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from database.helperfunctions import listSum, create_date_list
 from django.template.defaultfilters import last
+from django.db.models.deletion import DO_NOTHING
 
 '''
 TODO:
 * Gör klart alla modeller för att kunna genomföra bokningar
-    # Grundläggande modeller som bara håller data (ex. cyklar el. utrustning) 
-        görs abstrakta
-        - Eventuellt: Skadorna är också en underklass av cyklar
     # Gör det möjligt att föra statistik över sålda paket
-    # Gör om bokningssystemet till ett mer effektivt och som fungerar genom varje
-        bokningsbar modell istället för genom bokningsmodeller.
-    # Vid avbokningar tas i dagsläget cykeltillgänglighet bort, se till att den bara
-        ändras.
     
-* Gör managers till bokningsmodellerna för att kunna göra sökningar
 * Lägg in modeller för generiska bokningar/eventbokningar
 
 '''
 
+class Targetgroup(models.Model):
+    name = models.CharField(max_length=32, verbose_name='Namn på målgrupp')
+    behaviour = models.TextField(max_length=1000, verbose_name='Beteende',
+                                 help_text='Hur beter sig målgruppen i övrigt? Ex. Är de aktiva/livsnjutare?')
+    values = models.TextField(max_length=1000, verbose_name='Värderingar',
+                              help_text='Vad har de för värderingar?')
+    buys = models.TextField(max_length=1000, verbose_name='Vad köper de annars?')
+    
+    class Meta:
+        verbose_name = 'Målgrupp'
+        verbose_name_plural = 'Målgrupper'
+        
+    def __str__(self):
+        return self.name
 '''
 Models for lunches and lunch utilities
 '''
@@ -266,7 +273,64 @@ class Rooms(models.Model):
     def __str__(self):
         return '%s, %s' % (self.name, self.owned_by.name)
         
-
+'''
+Models for packages. The package builds on a main Package-class which stores
+all general info on the package and is called when booking. The Package class
+has a one-to-many relation with the Day-class, which stores info about what is
+included each day, as well as describing texts. The Package also has a Target-
+group-class which stores information about which target group the package is aimed
+at. This is only for internal use.
+'''
+class Package(models.Model):
+    slug = models.SlugField(max_length=30, verbose_name='Internt namn', help_text='används i URL, använd inte åäö')
+    title = models.CharField(max_length=40, verbose_name='Namn på paketet.')
+    price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Pris exkl. moms')
+    vat25 = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Moms 25%')
+    vat12 = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Moms 12%')
+    targetgroup = models.ForeignKey(
+        Targetgroup,
+        blank=True,
+        related_name='targetgroup',
+        on_delete=models.DO_NOTHING,
+        )
+    ingress = models.TextField(max_length = 500)
+    image = models.ImageField(upload_to='static/img/uploads/')
+    image_alt = models.CharField(max_length=40, blank=True)
+    
+    def __str__(self):
+        return self.title
+    
+class Day(models.Model):
+    package = models.ForeignKey(
+        Package,
+        on_delete=DO_NOTHING,
+        related_name='days',
+        )
+    order = models.PositiveIntegerField(verbose_name='Vilken dag?')
+    adult_bike = models.PositiveIntegerField(help_text='Antal vuxencyklar', blank=True)
+    child_bike = models.PositiveIntegerField(help_text='Antal barncyklar', blank=True)
+    room = models.ForeignKey(
+        Rooms,
+        on_delete=models.DO_NOTHING,
+        blank=True,
+        )
+    lunch = models.ForeignKey(
+        Lunch,
+        on_delete=models.DO_NOTHING,
+        blank=True,
+        related_name='lunch',
+        )
+    
+    # Texts
+    text = models.TextField(max_length=2000)
+    image = models.ImageField(blank=True, upload_to='static/img/uploads/')
+    image_alt =models.CharField(max_length=30, blank=True)
+    distance = models.PositiveIntegerField(verbose_name='Hur långt cyklar man?', blank=True)
+    locks = models.PositiveIntegerField(verbose_name='Hur många slussar?', blank=True)
+    
+    def __str__(self):
+        return 'Dag {}, {}'.format(self.order, self.package)
+    
 '''
 Guest model, inherits from GuestUser (Proxymodel of User) and GuestExtra
 (abstract model with extra information that we want about the guests.
@@ -301,7 +365,7 @@ class GuestManager(models.Manager):
             except:
                 # if the username is already taken, create a unique username for the person
                 # this hopefully works, otherwise it fails.
-                username= '.'.join(['email', 'first_name', 'last_name'])
+                username= ','.join(['email', 'first_name', 'last_name'])
                 guest = Guest.objects.create(username = username, password=password, first_name=first_name,
                               last_name = last_name, email=email,
                               phone_number = kwargs['kwargs']['phone_number'],
@@ -354,9 +418,8 @@ class Discount_codes(models.Model):
         verbose_name = 'gäst',
         null = True
         )
-
 '''
-Boking models.
+Booking models.
 
 Model for booking, manager for booking querysets, helper function for
 calculating booking_number, 
@@ -467,7 +530,7 @@ class Booking(models.Model):
     longest_prel = models.DateTimeField(verbose_name='längsta preliminärbokning', null=True,
                                         validators= [validate_preliminary], blank=True)
     status = models.CharField(max_length=5, verbose_name='Status', choices=booking_status_codes)
-    
+    package = models.BooleanField(default=False, verbose_name='Paketbokning')
     # Dates
     start_date = models.DateField(verbose_name='datum för avresa', null=True, validators=
                                  [])
@@ -597,7 +660,8 @@ class BikesBooking(models.Model):
         related_name='bike',
         null = True,
         on_delete=models.DO_NOTHING,
-        blank=True
+        blank=True,
+        #limit_choices_to = Bike.availability.fileter('available' = True),
         )
     booking = models.ForeignKey(
         Booking,

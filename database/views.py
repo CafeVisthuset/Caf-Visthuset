@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http.response import HttpResponse
-from .models import Booking, Bike, LunchBooking, calc_booking_no
+from .models import Booking, Bike, LunchBooking, calc_booking_no, Package, Day
 from .forms import CreateAvailableBikeForm
 from datetime import datetime, timedelta, date
 from django.forms.formsets import formset_factory
@@ -296,7 +296,6 @@ def customer_bike_booking_view(request):
             # Time variables
             start_date = data['start_date']
             duration = data['duration']
-            print(duration, type(duration))
             end_date = start_date + duration - timedelta(days=1)
             date_list = create_date_list(start_date, duration.days)
             
@@ -381,7 +380,11 @@ def customer_bike_booking_view(request):
         form = CustomerBikeBookingForm()
         
     return render(request, 'bookings/bike_booking.html', {'form': form, 'page':page, 'texts':texts})  
-      
+
+def package_booking(request, slug):
+    package = Package.objects.get(slug=slug)
+    days = Day.objects.filter(package=package).order_by('order')
+
 def confirmation_view(request, pk):    
     booking = Booking.objects.get(booking=pk)
     start_date = booking.start_date
