@@ -1,12 +1,22 @@
 {% extends '../visthuset_base.html' %}
-
-{% block title %}<title>{{ package.title }}</title>{% end block %}
+{% load static %}
+{% block title %}<title>Boka {{ package.title }}</title>{% endblock %}
 
 {% block content %}
+<section class="row">
+	<div class="col-xs-12 col-md-6">
+		<img alt="{{ package.image_alt}}" src="{{ package.image.url }}" class="image-responsive">
+		<h1 class="heading text-info">Boka {{ package.title }}!</h1>
+		<p class='text-primary'>{{ package.ingress }}</p>
+		{% for day in days %}
+		<h3 class="heading text-info mt-0"><u>Dag {{day.order}}, avstånd: {{ day.distance }} km, slussar: {{ day.locks }}</u></h3>
+		<p>{{ day.text }}</p>
+		{% endfor %}
+	</div>
 	<div class="col-xs-11 col-md-4 col-offset-2 panel " style="padding-bottom: 5%;">
 		<p class="text-danger">{{ message }}</p>
 		<div class="panel-heading">
-		<h3 class="text-primary">Boka cykel här!</h3>
+		<h3 class="text-primary">Boka paketet här!</h3>
 		</div>
 		<form class="form-group panel-body" action="" method="post" >
 			{% csrf_token %}
@@ -25,4 +35,5 @@
 			<input type="submit" class="btn btn-primary btn-block pull-right" value="Boka!"/>
 		</form>
 	</div>
-{% end block content %}
+</section>
+{% endblock content %}

@@ -1,17 +1,14 @@
-from functools import update_wrapper
-
 from django.contrib import admin
-from .models import Bike, Booking, BikeAvailable, BikesBooking, LunchBooking
-from database.models import Damages, Facility, Rooms, Guest, RoomsBooking, Lunch
+from database.models import *
 from Economy.models import Staff, Employee
-from database.forms import BikesForm, LunchBookingForm, CreateAvailableBikeForm,\
+from database.forms import BikesForm, AdminLunchBookingForm, CreateAvailableBikeForm,\
     BikeBookingForm
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from database.helperfunctions import create_date_list
-from datetime import timedelta, date
+from datetime import timedelta
 
 
 # register bikes for users
@@ -19,21 +16,18 @@ class DamagesInline(admin.TabularInline):
     model = Damages
     extra = 1
     
+#@admin.register(BikeSize)
+class BikeSizeAdmin(admin.ModelAdmin):
+    fields = ['name', 'internal', 'wheelsize', 'min_age', 'max_age']
+    
 @admin.register(Bike)
 class BikesAdmin(admin.ModelAdmin):
     form_class = BikesForm
-    list_display = ('number', 'attribute', 'wheelsize','rentOutCount', 'damage_report')
+    list_display = ['number', 'bikeKeyNo','size', 'damage_report']
     
-    readonly_fields = ['damage_report', 'rentOutCount']
+    readonly_fields = ['damage_report',]
     inlines = (DamagesInline, )
     
-    actions = ['reset_rent_out_count', ]  
-    
-    # Actions
-    def reset_rent_out_count(self, request, queryset):
-        queryset.update(rentOutCount = 0)
-    reset_rent_out_count.short_description = 'Återställ antal uthyrningar till 0'
-
     # Readonly outputs
     def damage_report(self, instance):
         return format_html_join(mark_safe('<br/>'),
@@ -112,7 +106,35 @@ Admins for Lunch and Utilities
 '''
 @admin.register(Lunch)
 class LunchAdmin(admin.ModelAdmin):
-    fields = ['type', 'price' ,'slug'] 
+    fields = ['name', 'type', 'price' ,'slug']
+    list_display = ['name', 'type', 'price' ,'slug']
+    
+@admin.register(Targetgroup)   
+class TargetGroupAdmin(admin.ModelAdmin):
+    fieldsets=[
+        (None,      {'fields': ['name']}),
+        ('Beteenden',{'fields': ['behaviour', 'values', 'buys']})
+        ]
+    list_display = ['name']
+    
+class DayInline(admin.TabularInline):
+    model = Day
+    fieldsets=[
+        (None,      {'fields': ['order']}),
+        ('Innehåll',{'fields': ['include_adultbike', 'include_childbike', 'room', 'lunch', 'dinner']}),
+        ('Texter',  {'fields': ['distance', 'locks', 'text', 'image', 'image_alt']})
+        ]
+    extra = 0
+    
+@admin.register(Package)   
+class PackageAdmin(admin.ModelAdmin):
+    fieldsets=[
+        (None,          {'fields': ['slug', 'title', 'active', 'price', 'vat25', 'vat12']}),
+        ('Målgrupper',  {'fields': ['targetgroup']}),
+        ('Texter',      {'fields': ['ingress', 'image', 'image_alt']}),
+    ] 
+    inlines = [DayInline, ]
+    list_display = ['title', 'slug', 'active', 'price', 'targetgroup']
     
 '''
 Booking admin
@@ -124,18 +146,18 @@ class RoomsBookingInLine(admin.TabularInline):
     model = RoomsBooking
     extra = 1
     fields = ['numberOfGuests', 'from_date', 'to_date', 'room', 'subtotal']
-    readonly_fields = ['subtotal']
+    readonly_fields = ['subtotal',]
         
 class BikesBookingInLine(admin.TabularInline):
     model = BikesBooking
     form = BikeBookingForm
     extra = 0
-    readonly_fields = ['subtotal']
+    readonly_fields = ['to_date', 'subtotal']
     
 class LunchBookingInLine(admin.TabularInline):
     model = LunchBooking
     extra = 1
-    form = LunchBookingForm
+    form = AdminLunchBookingForm
     readonly_fields = ['subtotal']
 
 
@@ -143,7 +165,7 @@ class LunchBookingInLine(admin.TabularInline):
 @admin.register(Booking)
 class BookingsAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,          {'fields': ['guest', 'booking', 'status', 'longest_prel', 'created_at', 'updated_at']}),
+        (None,          {'fields': ['guest', 'booking', 'package', 'status', 'longest_prel', 'created_at', 'updated_at']}),
         ('Info om gästen', {'fields': ['adults', 'children', 'discount_code']}),
         ('Specifikationer', {'fields': ['total', 'booked_bike_report', 'booked_room_report',
                                         'booked_lunch_report']}),
@@ -154,7 +176,7 @@ class BookingsAdmin(admin.ModelAdmin):
     actions = ['cancel_booking', 'preliminary', 'make_active', 'complete']
 
     inlines = [BikesBookingInLine, RoomsBookingInLine, LunchBookingInLine]
-    
+
     def booked_bike_report(self, instance):
         return format_html_join(mark_safe('<br/>'),
                                 'Typ: {}cykel, Nummer: {}',
@@ -183,8 +205,7 @@ class BookingsAdmin(admin.ModelAdmin):
         for item in queryset:
             bk_books = BikesBooking.objects.filter(booking=item.booking)
             for bk in bk_books:
-                duration = bk.to_date - bk.from_date
-                for day in create_date_list(bk.from_date, duration.days+1):
+                for day in create_date_list(bk.from_date, bk.duration.days):
                     BikeAvailable.objects.unbook_bike(bk.bike, day)
                 bk.bike = None
                 bk.save()
@@ -199,7 +220,10 @@ class BookingsAdmin(admin.ModelAdmin):
     preliminary.short_description = 'Gör till preliminärbokning'
     
     def make_active(self, request, queryset):
+        for item in queryset:
+            item.save()
         queryset.update(status='actv')
+        
     make_active.short_description = 'Gör aktiv'
     
     def complete(self, request, queryset):

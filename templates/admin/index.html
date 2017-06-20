@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'admin/css/dashboard.css' %}" />{% endblock %}
 
 {% block coltype %}colMS{% endblock %}
 
@@ -12,23 +12,27 @@
 {% block content %}
 
 {% if app_list %}
-	<div class="app-database module">
-		<table>
-		<caption>
-			<a href="/booking/availablebike/">Tillgänglighet cyklar</a>
-		</caption>
-		<th scope="row"><a href="/booking/availablebike/">Lägg till tillgänglighet för cyklar</a></th>
-		<th scope="row"><a href=""></a></th>
-		</table>
-	</div>
     {% for app in app_list %}
         <div class="app-{{ app.app_label }} module">
         <table>
         <caption>
             <a href="{{ app.app_url }}" class="section" title="{% blocktrans with name=app.name %}Models in the {{ name }} application{% endblocktrans %}">{{ app.name }}</a>
         </caption>
+        {% if app.app_label == 'database' %}
+        	<tr class = "bikesavailable">
+            	<th scope="row"><a href="{% url 'database:createbikes' %}">Lägg till tillgänglighet för cyklar</a></th>
+            	
+            </tr>
+            <tr class="viewavailablebikes">
+            	<th scope="row"><a href="{% url 'database:bookingcalendar' %}">Se lediga cyklar</a></th>
+            </tr>
+            <tr class="viewbookings">
+            	<th scope="row"><a href="{% url 'database:bookings_today' %}">Se kommande bokningar</a></th>
+            </tr>
+		{% endif %}
         {% for model in app.models %}
             <tr class="model-{{ model.object_name|lower }}">
+            
             {% if model.admin_url %}
                 <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
             {% else %}

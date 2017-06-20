@@ -1,0 +1,120 @@
+{% extends "admin/app_index.html" %}
+{% load i18n admin_modify %}
+{% block extrahead %}{{ block.super }}
+{% url jsi18n as jsi18nurl %}
+<script src="{{ jsi18nurl}}" type="text/javascript"><!--mce:0--></script>  
+{% endblock %}
+{% block extrastyle %}{{ block.super }}
+{% endblock %}
+{% block bodyclass %}{{ opts.app_label }}-{{ opts.object_name.lower }} change-form{% endblock %}
+{% block breadcrumbs %}{% if not is_popup %}
+<div class="breadcrumbs">  
+     <a href="../../admin/">{% trans "Home" %}</a> ›
+     {% trans 'Se alla bokningar' %}</div>
+{% endif %}{% endblock %}
+
+{% block content %}
+<section class="row">
+	<div class="col-md-12">
+	<h1 class='header'>Dagens bokningar</h1>
+	{% if today %}
+	<div class="table-responsive" style="padding-bottom:5%;">
+		<table class="table">
+			<tr>
+				<th>Bokningsnummer</th>
+				<th>Förnamn</th>
+				<th>Efternamn</th>
+				<th>Telefon</th>
+				<th>Paket</th>
+				<th>Cyklar</th>
+				<th>Rum</th>
+				<th>Luncher</th>
+			</tr>
+			{% for booking in today %}
+			<tr>
+		    	<td><a href="{{ booking.get_absolute_url }}">{{ booking.booking }}</a></td>
+		    	<td>{{ booking.guest.first_name }}</td>
+		    	<td>{{ booking.guest.last_name }}</td>
+		    	<td>{{ booking.guest.phone_number }}</td>
+		    	<td>{% if booking.package %}{{ booking.package }}{% else %}Ej paket{% endif %}</td>
+		    	<td>{% if booking.booked_bike.all %}{% for bike in booking.booked_bike.all %}{{ bike.bike }}{% endfor %}{% else %}Inga cyklar{% endif %}</td>
+		    	<td>{% if booking.booked_rooms.all %}{% for room in booking.booked_rooms.all %}{{ room.room }}{% endfor %}{% else %}Inga rum{% endif %}</td>
+		    	<td>{% if booking.booked_lunches.all %}{% for lunch in booking.booked_lunches.all %}{{ lunch.type }}{% endfor %}{% else %}Inga luncher{% endif %}</td>
+		    </tr>
+		    {% endfor %}
+	    </table>
+    </div>
+    {% else %}
+    <p> Inga bokningar idag! </p>
+    {% endif %}
+	</div>
+	
+	<div class="col-md-12" style="padding-bottom:5%;">
+	<h1 class='header'>Bokningar imorgon</h1>
+	{% if tomorrow %}
+	<div class="table-responsive" >
+		<table class="table table-hover">
+			<tr>
+				<th>Bokningsnummer</th>
+				<th>Förnamn</th>
+				<th>Efternamn</th>
+				<th>Telefon</th>
+				<th>Paket</th>
+				<th>Cyklar</th>
+				<th>Rum</th>
+				<th>Luncher</th>
+			</tr>
+			{% for booking in tomorrow %}
+			<tr>
+		    	<td><a href="{{ booking.get_absolute_url }}">{{ booking.booking }}</a><td>
+		    	<td>{{ booking.guest.first_name }}</td>
+		    	<td>{{ booking.guest.last_name }}</td>
+		    	<td>{{ booking.guest.phone_number }}</td>
+		    	<td>{% if booking.package %}{{ booking.package }}{% else %}Ej paket{% endif %}</td>
+		    	<td>{% if booking.booked_bike.all %}{% for bike in booking.booked_bike.all %}{{ bike.bike }} <br>{% endfor %}{% else %}Inga cyklar{% endif %}</td>
+		    	<td>{% if booking.booked_rooms.all %}{% for room in booking.booked_rooms.all %}{{ room.room }} <br>{% endfor %}{% else %}Inga rum{% endif %}</td>
+		    	<td>{% if booking.booked_lunches.all %}{% for lunch in booking.booked_lunches.all %}{{ lunch.type }} <br>{% endfor %}{% else %}Inga luncher{% endif %}</td>
+		    </tr>
+		    {% endfor %}
+	    </table>
+    </div>
+    {% else %}
+    <p> Inga bokningar imorgon! </p>
+    {% endif %}
+	</div>
+	
+	<div class="col-xs-12 col-md-12" style="padding-bottom:5%;">
+	<h1 class='header'>Bokningar om 2 dagar</h1>
+	{% if day_after_tomorrow %}
+	<div class="table-responsive">
+		<table class="table table-hover">
+			<tr>
+				<th>Bokningsnummer</th>
+				<th>Förnamn</th>
+				<th>Efternamn</th>
+				<th>Telefon</th>
+				<th>Paket</th>
+				<th>Cyklar</th>
+				<th>Rum</th>
+				<th>Luncher</th>
+			</tr>
+			{% for booking in day_after_tomorrow %}
+			<tr>
+		    	<td><a href="{{ booking.get_absolute_url }}">{{ booking.booking }}</a><td>
+		    	<td>{{ booking.guest.first_name }}</td>
+		    	<td>{{ booking.guest.last_name }}</td>
+		    	<td>{{ booking.guest.phone_number }}</td>
+		    	<td>{% if booking.package %}{{ booking.package }}{% else %}Ej paket{% endif %}</td>
+		    	<td>{% if booking.booked_bike.all %}{% for bike in booking.booked_bike.all %}{{ bike.bike }}{% endfor %}{% else %}Inga cyklar{% endif %}</td>
+		    	<td>{% if booking.booked_rooms.all %}{% for room in booking.booked_rooms.all %}{{ room.room }}{% endfor %}{% else %}Inga rum{% endif %}</td>
+		    	<td>{% if booking.booked_lunches.all %}{% for lunch in booking.booked_lunches.all %}{{ lunch.type }}{% endfor %}{% else %}Inga luncher{% endif %}</td>
+		    </tr>
+		    {% endfor %}
+	    </table>
+    </div>
+    {% else %}
+    <p> Inga bokningar om 2 dagar! </p>
+    {% endif %}
+	</div>
+</section>
+{% endblock %}

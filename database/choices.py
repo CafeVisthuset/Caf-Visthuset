@@ -4,10 +4,10 @@ Created on 26 nov. 2016
 @author: Adrian
 '''
 from datetime import date, datetime, timedelta
-Lunch_Choices = [
-    ('vegetarian', 'vegetarisk'),
-    ('meat', 'kallskuret'),
-    ('fish', 'Vätternröding'),
+Dinner_choices = [
+    ('menu', 'Smaka på Skaraborg-meny'),
+    ('custom', 'Valfri varmrätt'),
+    ('dinner', 'middag'),
     ]
 
 Bike_Extra_Choices =[
@@ -50,6 +50,7 @@ Brand_choices = [
 Action_Choices = [
     ('create', 'skapa tillgänglighet'),
     ('delete', 'ta bort tillgänglighet'),
+    ('all', 'Skapa tillgänglighet för alla cyklar'),
     # ('update', 'uppdatera en tillgänglighet'),
     ]
 
@@ -64,11 +65,11 @@ now = datetime.now().year
 YEARS = {
     now: str(now),
     now + 1: str(now + 1),
-    now - 1: str(now - 1),
+#    now - 1: str(now - 1),
     }
 
 MONTHS = {
-    1: 'Januari', 5: 'Maj', 6: 'Juni', 7:'Juli', 8: 'Augusti',
+    4: 'April', 5: 'Maj', 6: 'Juni', 7:'Juli', 8: 'Augusti',
     9: 'September', 10: 'Oktober'
     }
 
@@ -87,4 +88,5 @@ booking_status_codes = [
     ('actv', 'Aktiv'),
     ('cmplt', 'Genomförd'),
     ('prel', 'Preliminär'),
+    ('unconf', 'Obekräftad')
     ]

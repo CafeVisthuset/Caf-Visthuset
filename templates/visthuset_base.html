@@ -8,64 +8,21 @@
     	<meta name="viewport" content="width=device-width, initial-scale=1">
     	{% block title %}<title>Välkommen till Cafe Visthuset!</title>{% endblock %}
     	{% include 'stylesheets.html' %}
-    	{% include 'javascripts.html' %}
     </head>
 	<body class="container-fluid">
 		{% block header %}
 		<header class="row">
-		
-			<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
-				<!-- Indicators -->
-				<ol class="carousel-indicators">
-					<li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
-					<li data-target="#carousel-example-generic" data-slide-to="1"></li>
-					<li data-target="#carousel-example-generic" data-slide-to="2"></li>
-				</ol>
-					
-				<!-- Wrapper for slides -->
-				<div class="carousel-inner" role="listbox">
-				
-					<div class="item active">
-						<a href="{% url 'visthuset_index' %}">
-						    <img src="{% static '/img/banner_ute_musik.jpg' %}" alt="...">
-						    <div class="carousel-caption">
-						        <h1>Café Visthuset</h1>
-				          		<h3>En lummig mötesplats vid Göta kanal</h3>
-						    </div>
-						 </a>
-					</div>
-					<div class="item">
-						<a href="{% url 'meny' %}">
-						    <img src="{% static 'img/Glassbild3.jpg' %}" alt="...">
-						    <div class="carousel-caption">
-						        <h1>Café Visthuset</h1>
-				          		<h3>Glass vid Göta kanal!</h3>
-						    </div>
-						 </a>
-					</div>
-					<div class="item">
-						<a href="{% url 'uthyrning' %}">
-						    <img src="{% static 'img/unspecified.jpeg' %}" alt="...">
-						    <div class="carousel-caption">
-						        <div style="margin-top: 5%;" >
-				          			<h1>Café Visthuset</h1>
-				          			<h3>Hyr en cykel vid Göta kanal!</h3>
-				        		</div>
-							</div>
-						</a>
-					</div>			    
+			{% if page.static_banner %}
+			<div class="item">
+				<img src="{{ page.banner.image.url }}" alt="{{ page.banner.imagealt }}">
+				<div class="carousel-caption">
+					<h1>Café Visthuset</h1>
+				    <h3>Glass vid Göta kanal!</h3>
 				</div>
-					
-				<!-- Controls -->
-				<a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
-					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-					<span class="sr-only">Previous</span>
-				</a>
-				<a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
-					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-					<span class="sr-only">Next</span>
-				</a>
 			</div>
+			{% else %}
+				{% include 'banner.html' %}
+			{% endif %}
 			<div class="row">
 	        	<div class="col-md-12 col-md-12"> 
 	        		
@@ -121,6 +78,8 @@
 		</section>
 		{% endblock %}
     	</main>
+    	{% include 'javascripts.html' %}
+    	{% block javascripts %}{% endblock %}
     	{% include 'footer.html' %}
     </body>
 </html>

@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist,\
 from django.contrib.auth.models import User
 from django.db.models import Q
 from database.helperfunctions import listSum, create_date_list
-from django.template.defaultfilters import last
 from django.db.models.deletion import DO_NOTHING
 
 '''
@@ -38,9 +37,11 @@ class Targetgroup(models.Model):
 Models for lunches and lunch utilities
 '''
 class Lunch(models.Model):
-    slug = models.SlugField(default='')
-    type = models.CharField(choices=Lunch_Choices, default='vegetarian', max_length= 15, verbose_name='lunchalternativ')
+    slug = models.SlugField(default='', verbose_name='Internt namn', help_text='Namn att använda i koden, ändra inte!!')
+    name = models.CharField(max_length= 30, verbose_name='Lunch', help_text='Namn att visa utåt')
     price = models.PositiveIntegerField(default = 95, verbose_name='pris')
+    type = models.CharField(max_length=15, choices=[(None, 'övrigt'), ('picnic', 'Picknicklunch')], null=True, blank=True,
+                            verbose_name='lunchtyp')
     # TODO: implement allergens with lunches
     
     class Meta:
@@ -48,7 +49,7 @@ class Lunch(models.Model):
         verbose_name_plural = 'luncher'
         
     def __str__(self):
-        return self.type
+        return self.name
 
         
 class Utilities(models.Model):
@@ -122,16 +123,27 @@ class BikeBookingManager(models.Manager):
     
     def unbook_bike(self, bike, date):
         pass
+
+class BikeSize(models.Model):
+    name = models.CharField(max_length=25, verbose_name='Namn')
+    internal = models.CharField(max_length=25, verbose_name='Internt namn')
+    min_age = models.PositiveIntegerField(verbose_name='Minimum ålder')
+    max_age = models.PositiveIntegerField(blank=True, verbose_name='Max ålder')
+    wheelsize = models.PositiveIntegerField(verbose_name = 'Däckdiameter')
+    
+    def __str__(self):
+        return self.name
     
 # Bike model
 class Bike(models.Model):
     number = models.PositiveIntegerField(verbose_name= 'Nummer')
     bikeKeyNo = models.CharField(max_length= 15, blank= True, verbose_name='Cykelnyckel')
-    rentOutCount = models.IntegerField(default = 0, verbose_name='antal uthyrningar')
-    wheelsize = models.CharField(choices=Bike_Wheelsize_Choices, max_length= 10,
-                                 verbose_name='Däckdiameter')
-    attribute = models.CharField(choices=Bike_Attribute_Choices, max_length= 10,
-                                 verbose_name='vuxen/barn')
+    size = models.ForeignKey(
+        BikeSize,
+        on_delete=models.DO_NOTHING,
+        verbose_name = 'storlek',
+        related_name='size',
+        )
     extra = models.CharField(choices=Bike_Extra_Choices, max_length= 15,
                              verbose_name='Knuten till tillbehör', blank=True)
     
@@ -139,19 +151,12 @@ class Bike(models.Model):
     booking = BikeBookingManager()
     
     def __str__(self):
-        attr = {
-            'adult': 'vuxen',
-            'young': 'ungdom',
-            'child': 'barn',
-            'smallChild': 'småbarn',
-            }
-        return "%scykel %s" % (attr[self.attribute], self.number)
+        return "%scykel %s" % (self.size.name, self.number)
     
     class Meta:
         verbose_name = 'cykel'
         verbose_name_plural = 'cyklar'
-        ordering = ['-attribute', 'number']
-        unique_together = ['number', 'attribute']
+        ordering = ['number']
 
        
 class BikeExtra(models.Model):
@@ -284,6 +289,7 @@ at. This is only for internal use.
 class Package(models.Model):
     slug = models.SlugField(max_length=30, verbose_name='Internt namn', help_text='används i URL, använd inte åäö')
     title = models.CharField(max_length=40, verbose_name='Namn på paketet.')
+    active = models.BooleanField(default=False, verbose_name='Är paketet aktivt?')
     price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Pris exkl. moms')
     vat25 = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Moms 25%')
     vat12 = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Moms 12%')
@@ -291,14 +297,19 @@ class Package(models.Model):
         Targetgroup,
         blank=True,
         related_name='targetgroup',
+        verbose_name='målgrupp',
         on_delete=models.DO_NOTHING,
         )
     ingress = models.TextField(max_length = 500)
-    image = models.ImageField(upload_to='static/img/uploads/')
-    image_alt = models.CharField(max_length=40, blank=True)
+    image = models.ImageField(upload_to='static/img/uploads/', verbose_name='Bild')
+    image_alt = models.CharField(max_length=40, blank=True, verbose_name='bildtext')
     
     def __str__(self):
         return self.title
+    
+    class Meta:
+        verbose_name = 'Paket'
+        verbose_name_plural = 'Paket'
     
 class Day(models.Model):
     package = models.ForeignKey(
@@ -307,30 +318,37 @@ class Day(models.Model):
         related_name='days',
         )
     order = models.PositiveIntegerField(verbose_name='Vilken dag?')
-    adult_bike = models.PositiveIntegerField(help_text='Antal vuxencyklar', blank=True)
-    child_bike = models.PositiveIntegerField(help_text='Antal barncyklar', blank=True)
+    include_adultbike = models.BooleanField(default=True, verbose_name='Ingår vuxencykel?', blank=True)
+    include_childbike = models.BooleanField(default=False, verbose_name='Ingår barncykel?', blank=True)
     room = models.ForeignKey(
         Rooms,
         on_delete=models.DO_NOTHING,
         blank=True,
+        null=True,
         )
     lunch = models.ForeignKey(
         Lunch,
         on_delete=models.DO_NOTHING,
         blank=True,
+        null=True,
         related_name='lunch',
         )
+    dinner = models.CharField(choices=Dinner_choices, max_length=20, verbose_name='Middag', blank=True)
     
     # Texts
     text = models.TextField(max_length=2000)
     image = models.ImageField(blank=True, upload_to='static/img/uploads/')
     image_alt =models.CharField(max_length=30, blank=True)
-    distance = models.PositiveIntegerField(verbose_name='Hur långt cyklar man?', blank=True)
-    locks = models.PositiveIntegerField(verbose_name='Hur många slussar?', blank=True)
+    distance = models.PositiveIntegerField(verbose_name='Hur långt cyklar man?', blank=True, null=True)
+    locks = models.PositiveIntegerField(verbose_name='Hur många slussar?', blank=True, null=True)
     
     def __str__(self):
         return 'Dag {}, {}'.format(self.order, self.package)
     
+    class Meta:
+        verbose_name = 'Dag'
+        verbose_name_plural = 'Dagar'
+        
 '''
 Guest model, inherits from GuestUser (Proxymodel of User) and GuestExtra
 (abstract model with extra information that we want about the guests.
@@ -365,7 +383,7 @@ class GuestManager(models.Manager):
             except:
                 # if the username is already taken, create a unique username for the person
                 # this hopefully works, otherwise it fails.
-                username= ','.join(['email', 'first_name', 'last_name'])
+                username= ','.join([email, first_name, last_name])
                 guest = Guest.objects.create(username = username, password=password, first_name=first_name,
                               last_name = last_name, email=email,
                               phone_number = kwargs['kwargs']['phone_number'],
@@ -491,25 +509,11 @@ class BookingManager(models.Manager):
      
     '''
     # Create, update, delete
-    def create_booking(self, guest, start_date, end_date, adults, children, special_requests):
-        return self.create(guest=guest,
-                              start_date=start_date, 
-                              end_date=end_date,
-                              adults=adults,
-                              children=children,
-                              status='actv',
-                              special_requests=special_requests)
         
     def update_booking(self, booking_number, **kwargs):
         booking = self.get(booking=booking_number)
         return booking.update(**kwargs)
         
-    def delete_booking(self, booking, status_code):
-        '''
-        Make booking inactive with status code.
-        '''
-        pass
-    
 # Booking models
 class Booking(models.Model):
     # Guest
@@ -530,12 +534,16 @@ class Booking(models.Model):
     longest_prel = models.DateTimeField(verbose_name='längsta preliminärbokning', null=True,
                                         validators= [validate_preliminary], blank=True)
     status = models.CharField(max_length=5, verbose_name='Status', choices=booking_status_codes)
-    package = models.BooleanField(default=False, verbose_name='Paketbokning')
+    package = models.ForeignKey(
+        Package,
+        blank=True,
+        null=True,
+        verbose_name='Paket'
+        )
+    
     # Dates
-    start_date = models.DateField(verbose_name='datum för avresa', null=True, validators=
-                                 [])
-    end_date = models.DateField(verbose_name='datum för hemresa', null=True, validators=
-                               [])
+    start_date = models.DateField(verbose_name='datum för avresa', null=True)
+    end_date = models.DateField(verbose_name='datum för hemresa', null=True)
     
     # Potential discount code
     discount_code = models.CharField(blank=True, null=True, max_length=15, verbose_name= 'rabattkod',
@@ -566,7 +574,38 @@ class Booking(models.Model):
     def __str__(self):
         return str(self.booking)
     
+    def get_absolute_url(self):
+        return '/admin/database/booking/{}/'.format(self.booking)
+    
     def save(self, *args, **kwargs):
+        # Fix booking dates
+        sdate = None
+        edate = None
+        qs = []
+        qs.append(BikesBooking.objects.filter(booking=self))
+        qs.append(RoomsBooking.objects.filter(booking=self))
+        qslunch = LunchBooking.objects.filter(booking=self)
+        for queryset in qs:
+            for booking in queryset:
+                if not sdate:
+                    sdate = booking.from_date
+                    edate = booking.to_date
+                else:
+                    if sdate > booking.from_date:
+                        sdate = booking.from_date
+                    if edate < booking.to_date:
+                        edate = booking.to_date
+        for booking in qslunch:
+            if not sdate:
+                sdate = booking.day
+                edate = booking.day
+            else:
+                if sdate > booking.day:
+                    sdate = booking.day
+                if edate < booking.day:
+                    edate = booking.day
+        self.start_date = sdate
+        self.end_date = edate
         # Calculate total price for booking when saving
         priceList = []
         bikes = BikesBooking.objects.filter(booking=self.booking)
@@ -633,10 +672,8 @@ class Booking(models.Model):
         duration = to_date - from_date
         datelist = create_date_list(from_date, duration.days)
         for date in datelist:
-            print(type(date))
             BikeAvailable.objects.unbook_bike(bike, date)
             
-
     def setBikeExtraBooking(self, **kwargs):
         pass
     
@@ -646,10 +683,12 @@ class Booking(models.Model):
     def setAccomodationBooking(self, **kwargs):
         pass
 
+            
 class BikesBooking(models.Model):
     # Dates and time
-    from_date = models.DateTimeField()
-    to_date = models.DateTimeField()
+    from_date = models.DateField(default=date.today, verbose_name='Från datum')
+    to_date = models.DateField(default=date.today, blank=True, verbose_name='Till datum')
+    duration = models.DurationField(choices=Day_Choices, default=timedelta(days=1), verbose_name='Hur många dagar?')
     full_days = models.BooleanField(default=True)
     
     # Economy
@@ -658,6 +697,7 @@ class BikesBooking(models.Model):
     # Bookings and specs
     bike = models.ForeignKey(Bike,
         related_name='bike',
+        verbose_name='Cykel',
         null = True,
         on_delete=models.DO_NOTHING,
         blank=True,
@@ -667,22 +707,30 @@ class BikesBooking(models.Model):
         Booking,
         related_name='booked_bike',
         on_delete=models.DO_NOTHING,
+        blank = True,
         db_index = True,
         )
+
+    # Status
+    out = models.BooleanField(default=False, verbose_name='Utlämnad')
+    returned = models.BooleanField(default=False, verbose_name='Återlämnad')
     
     class Meta:
         verbose_name = 'cykelbokning'
         verbose_name_plural = 'cykelbokningar'
-            
+        
     def __str__(self):
-        return str(self.booking)
-    
+        try:
+            return str(self.booking)
+        except:
+            return 'Unbooked'
+
     def save(self, *args, **kwargs):
         # Calculate price for bike booking and save
-        days = self.to_date - self.from_date
+        self.to_date = self.from_date + self.duration
         full_day = self.full_days
         price = 200
-        self.subtotal = price * (days.days +1)
+        self.subtotal = price * (self.duration.days)
         super(BikesBooking, self).save(*args, **kwargs)
         '''
         # Update Available bikes
@@ -739,18 +787,18 @@ class BikeExtraBooking(models.Model):
         return self.extra
     
     def save(self, *args, **kwargs):
-        days = self.to_date - self.from_date
+        self.to_date = self.from_date + self.duration
         #full_day = self.full_day
         price = 200
-        self.subtotal = price * (days.days +1)
+        self.subtotal = price * (self.duration.days +1)
         super(BikesBooking, self).save(*args, **kwargs)
         
 
     
 class RoomsBooking(models.Model):
     numberOfGuests = models.PositiveIntegerField(verbose_name='antal gäster')
-    from_date = models.DateField()
-    to_date = models.DateField()
+    from_date = models.DateField(verbose_name='incheckning')
+    to_date = models.DateField(verbose_name='utcheckning')
     subtotal = models.DecimalField(max_digits=8, decimal_places=2)
     booking = models.ForeignKey(
         Booking,
@@ -759,8 +807,11 @@ class RoomsBooking(models.Model):
         )
     room = models.ForeignKey(
         Rooms,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name = 'Rum',
         )
+    facility_booking = models.CharField(max_length=25, blank=True, verbose_name='Anläggningens bokningsnummer')
+    confirmed = models.BooleanField(default=False, verbose_name='Bekräftad av anläggningen?')
     
     class Meta:
         verbose_name = 'rumsbokning'
@@ -775,19 +826,27 @@ class RoomsBooking(models.Model):
         self.subtotal = price * nights.days
         super(RoomsBooking, self).save(*args, **kwargs)
         
+    def confirm_booking(self, facility, facil_booking):
+        '''
+        Funktion tänkt att i framtiden automatisera bekräftandet av bokning från anläggning.
+        '''
+        pass
+    
 class LunchBooking(models.Model):
-    quantity = models.PositiveIntegerField()
-    day = models.DateField()
+    quantity = models.PositiveIntegerField(verbose_name = 'kvantitet')
+    day = models.DateField(verbose_name='dag')
     subtotal = models.DecimalField(max_digits=8, decimal_places=2)
     type = models.ForeignKey(
         Lunch,
         on_delete=models.CASCADE,
         blank = True,
+        verbose_name='Lunchtyp'
         )
     booking = models.ForeignKey(
         Booking,
         related_name='booked_lunches',
         on_delete=models.CASCADE,
+        verbose_name = 'Bokning'
         )
 
     class Meta:
@@ -800,9 +859,6 @@ class LunchBooking(models.Model):
     def save(self, *args, **kwargs):
         self.subtotal = self.type.price * self.quantity
         super(LunchBooking, self).save(*args, **kwargs)
-        
-class PackageBooking(models.Model):
-    pass
 
 
 
@@ -900,7 +956,7 @@ class BikeAvailableManager(models.Manager):
         
         date_list = create_date_list(start_date, duration.days)
         available_bike_list =[]
-        bikes = Bike.objects.filter(attribute=attr)
+        bikes = Bike.objects.filter(size__internal=attr)
         # Check in order if the bikes are available during the dates
         for bike in bikes:
             available = self.bike_for_dates(bike, date_list)    
@@ -950,25 +1006,30 @@ class BikeAvailableManager(models.Manager):
         Bookingadmin.cancel
         '''
         bk = BikeAvailable.objects.get(bike=bike, available_date=date)
-        print(bk)
         bk.available = True
         bk.bookings = None
         bk.save()
-        print(bk.available, bk.bookings)
-                       
+                         
+    def perform_booking(self, bike, start_date, duration, booking):
+        '''
+        Tanken med den här funktionen är att bara kunna kalla på den och ge den rätt
+        input och så går den igenom hela bokningsprocessen med cyklar.
+        '''
+        pass
+    
 # Availability for bikes
 class BikeAvailable(Available):
     bike = models.ForeignKey(
         Bike,
         related_name='availability',
-        on_delete=models.PROTECT,
+        on_delete=models.DO_NOTHING,
         blank = True
         )
     
     bookings = models.ForeignKey(
         BikesBooking,
         related_name='availableBike',
-        on_delete=models.PROTECT,
+        on_delete=models.DO_NOTHING,
         blank = True,
         null = True
         )
@@ -984,8 +1045,6 @@ class BikeAvailable(Available):
     def __str__(self):
         return str(self.bike)
     
-
-  
 # Rooms
 # Not needed until we can search external databases
 class RoomsAvailable(Available):
@@ -1000,4 +1059,32 @@ class RoomsAvailable(Available):
         )
 
 ###############################################################################
+# Signals
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from .helperfunctions import create_date_list
 
+@receiver(post_save, sender=BikesBooking)
+def book_from_admin(sender, instance, update_fields, **kwargs):
+    date_list = create_date_list(instance.from_date, instance.duration.days)
+    if kwargs['created'] == True:
+        print('if')
+        # If it is a new booking, just book the bikes
+        for date in date_list:
+            BikeAvailable.objects.book_bike(instance, instance.bike, date)
+    else:
+        print('else')
+        # If object is changed, first unbook the old bikes and then book the new bikes
+        old_booked_bikes = BikeAvailable.objects.filter(bookings=instance)
+        for bike in old_booked_bikes:
+            BikeAvailable.objects.unbook_bike(bike.bike, bike.available_date)
+            
+        for date in date_list:
+            BikeAvailable.objects.book_bike(instance, instance.bike, date)
+
+@receiver(post_delete, sender=BikesBooking)
+def deleted_from_admin(sender, instance, **kwargs):
+    date_list = create_date_list(instance.from_date, instance.duration.days)
+    
+    for date in date_list:
+        BikeAvailable.objects.unbook_bike(instance.bike, date)

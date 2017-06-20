@@ -4,7 +4,7 @@ Created on 13 jan. 2017
 @author: adrian
 '''
 from calendar import HTMLCalendar, monthrange
-from database.models import BikeAvailable
+from database.models import BikeAvailable, Booking, Bike
 from Economy.models import Event
 from django import template
 from datetime import date, datetime
@@ -171,6 +171,7 @@ class BikeCalendar(HTMLCalendar):
             if day == date.today():
                 cssclass += ' today'
             if day in self.bikes:
+                print(day)
                 cssclass += ' filled'
                 body = ['<ul>']
                 body.append('{} cyklar lediga'.format(len(self.bikes[day])))
@@ -193,4 +194,36 @@ class BikeCalendar(HTMLCalendar):
             [(day, list(items)) for day, items in groupby(bikes, field)])
         
     def day_cell(self, cssclass, body):
-        return'<td class="%s">%s</td>' % (cssclass, body)    
+        return'<td class="%s">%s</td>' % (cssclass, body)
+    
+class BookingsCalendar(HTMLCalendar):
+    
+    def __init__(self, bookings):
+        super(BookingsCalendar, self).__init__()
+        self.bookings = self.group_bookings_by_day(bookings)
+
+    def formatday(self, day, weekday):
+        if day != 0:
+            cssclass = self.cssclasses[weekday] + ' header'
+            all = len(Bike.objects.filter(size__internal='adult'))
+            if day == date.today():
+                cssclass += ' today'
+            if day in self.bookings:
+                cssclass += ' filled'
+                
+                booked = all - len(self.bookings[day])
+                return self.day_cell(cssclass, '<h1 class="header">{}</h1><br>{} vyxencyklar'.format(day,booked))
+            return self.day_cell(cssclass, '<h1 class="header">{}</h1><br>{} vuxencyklar'.format(day, all))
+        return self.day_cell('noday', '&nbsp;')
+    
+    def formatmonth(self, year, month):
+        self.year, self.month = year, month
+        return super(BookingsCalendar, self).formatmonth(year, month)
+    
+    def group_bookings_by_day(self, bookings):
+        field = lambda booking: booking.from_date.day
+        return dict(
+            [(day, list(items)) for day, items in groupby(bookings, field)])
+        
+    def day_cell(self, cssclass, body):
+        return'<td class="%s">%s</td>' % (cssclass, body) 

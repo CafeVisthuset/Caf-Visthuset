@@ -1,9 +1,7 @@
 from django.db import models
-from datetime import date, datetime
+from datetime import date
 from Economy.models import Employee
 from cleaning.choices import Weekday_Choices
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from .validators import validateTemperatureAnomaly
 
@@ -14,17 +12,17 @@ TODO:
 * Lägg in schema för personalen
 """
 class Supplier(models.Model):
-    name = models.CharField(max_length=50)
-    phone = models.CharField(max_length=20)
-    email = models.EmailField(blank=True)
+    name = models.CharField(max_length=50, verbose_name='namn')
+    phone = models.CharField(max_length=20, verbose_name='telefon')
+    email = models.EmailField(blank=True, verbose_name='Epost')
     contact = models.CharField(max_length=30, verbose_name='kontaktperson')
     order_day = models.CharField(max_length=15, choices=Weekday_Choices,
             help_text='Veckodag för beställning')
 
-    description = models.TextField(max_length=200, blank=True)
-    goods = models.TextField(max_length=100, blank=True)
+    description = models.TextField(max_length=200, blank=True, verbose_name='beskrivning')
 
-    other = models.TextField(max_length=200, blank=True)
+    other = models.TextField(max_length=200, blank=True, verbose_name='Övrigt',
+                             help_text='Till exempel att tänka på vid beställning')
 
     class Meta:
         verbose_name='leverantör'
@@ -94,9 +92,8 @@ class ControlPoint(models.Model):
     location = models.CharField(max_length = 255, verbose_name='Plats')
     short_description = models.TextField(max_length=255, verbose_name='Kort beskrivning')
     active = models.BooleanField(default=True, verbose_name='Används den?')
-    hazard = models.ManyToManyField(Hazard)
+    hazard = models.ManyToManyField(Hazard, verbose_name='Fara')
     
-    routine = models.ManyToManyField(Routine)
     routine_recurr = models.CharField(max_length=15, choices=RECCURRENCE,
                                       verbose_name='Hur ofta utförs rutinen?')
     routine_sufficient = models.BooleanField(default=True)
@@ -109,7 +106,27 @@ class ControlPoint(models.Model):
         
     def __str__(self):
         return self.name
-
+    
+class RiskAnalysis(models.Model):
+    control_point = models.ForeignKey(
+        ControlPoint, 
+        on_delete=models.DO_NOTHING,
+        verbose_name='kontrollpunkt',
+        )
+    routine = models.ForeignKey(
+        Routine,
+        on_delete=models.DO_NOTHING,
+        verbose_name='Rutin'
+        )
+    routine_recurr = models.CharField(max_length=15, choices=RECCURRENCE,
+                                      verbose_name='Hur ofta utförs rutinen?')
+    routine_sufficient = models.BooleanField(default=True)
+    comment = models.TextField(max_length=200, verbose_name='kommentar', blank=True)
+    
+    class Meta:
+        verbose_name='Rutin för kontrollpunkt'
+        verbose_name_plural='Rutiner för kontrollpunkter'
+    
 def auto_increment():
     try:
         storage = ColdStorage.objects.latest('number')
@@ -224,6 +241,7 @@ class Delivery(Documentation):
     smell = models.BooleanField(default=True, verbose_name='Lukt ok?')
     damaged = models.BooleanField(default=False, verbose_name='Förpackning ok?')
     expired = models.BooleanField(default=False, verbose_name='Datum ok?')
+    note = models.CharField(max_length=30, verbose_name='Följesedel')
     signature = models.ForeignKey(
         Employee, 
         on_delete=models.PROTECT,

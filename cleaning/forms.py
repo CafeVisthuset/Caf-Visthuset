@@ -53,7 +53,7 @@ class HazardForm(forms.ModelForm):
                     'analysis': '''Gör en analys av faran, hur allvarlig är den? Är våra grundförutsättningar och
                     rutiner tillräckliga för att minimera eller elimiminera faran?''',
                     }
-
+"""
 class ControlPointForm(forms.ModelForm):
     class Meta:
         model = ControlPoint
@@ -65,4 +65,4 @@ class ControlPointForm(forms.ModelForm):
         help_texts = {
             'routine_sufficient': '''Räcker rutinerna för att eliminera faran? Om inte skapas en kritisk
                     kontrollpunkt där extra övervakning och tillåtna gränser anges''',
-            }
+            }"""

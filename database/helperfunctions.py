@@ -42,16 +42,6 @@ def date_list_in_bike_list(date_lst, bike_lst):
             if lst == date_lst:
                 return True
     return False
-
-def setInput(self, input):
-    '''
-    Formats an input from e.g., a form to be either the input or None if the input
-    does not exist.
-    '''
-    try:
-        return self.data[input]
-    except:
-        return None
     
 def choicegen(start, end):
     '''

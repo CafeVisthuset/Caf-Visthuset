@@ -10,6 +10,12 @@ TODO:
 * Lägg till fält i admin-vyn där dagens, morgonens och att-göra uppgifter syns
 
 '''
+class RiskAnalysisInline(admin.TabularInline):
+    model = RiskAnalysis
+    fields = ['control_point', 'routine', 'routine_recurr', 'routine_sufficient', 'comment']
+    extra = 0
+    verbose_name = 'Rutin'
+    
 class ControlPointInline(GenericTabularInline):
     model = ControlPoint
     
@@ -41,54 +47,59 @@ class ColdStorageAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields':['name', 'created', 'updated']}),
         ('Grunder',         {'fields':['active', 'location', 'short_description']}),
-        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
-        ('Temperaturer',    {'fields': ['number', 'kind', 'prescribedMaxTemp', 'prescribedMinTemp']})
+        ('Temperaturer',    {'fields': ['number', 'kind', 'prescribedMaxTemp', 'prescribedMinTemp']}),
+        ('Riskanalys',      {'fields':['hazard', ]}),
         ]
     readonly_fields = ['created', 'updated']
     list_display = ['name', 'number', 'active', 'kind', 'created', 'updated']
+    inlines = [RiskAnalysisInline]
     
 @admin.register(Storage)
 class StorageAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields':['name', 'created', 'updated']}),
         ('Grunder',         {'fields':['active', 'location', 'short_description']}),
-        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ('Riskanalys',      {'fields':['hazard',]}),
         ]
     readonly_fields = ['created', 'updated']
     list_display = ['name', 'active', 'created', 'updated']
+    inlines = [RiskAnalysisInline]
     
 @admin.register(Preparation)
 class PreparationAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields':['name', 'created', 'updated']}),
         ('Grunder',         {'fields':['active', 'location', 'short_description']}),
-        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ('Riskanalys',      {'fields':['hazard',]}),
         ]
     readonly_fields = ['created', 'updated']
     list_display = ['name', 'active', 'created', 'updated']
+    inlines = [RiskAnalysisInline]
     
 @admin.register(Serving)
 class ServingAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields':['name', 'created', 'updated']}),
         ('Grunder',         {'fields':['active', 'location', 'short_description']}),
-        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ('Riskanalys',      {'fields':['hazard',]}),
         ]
     readonly_fields = ['created', 'updated']
     list_display = ['name', 'active',  'created', 'updated']
+    inlines = [RiskAnalysisInline]
     
 @admin.register(CriticalControlPoint)
 class CriticalControlPointAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields':['name', 'created', 'updated']}),
         ('Grunder',         {'fields':['active', 'location', 'short_description']}),
-        ('Riskanalys',      {'fields':['hazard', 'routine', 'routine_recurr']}),
+        ('Riskanalys',      {'fields':['hazard',]}),
         ('Extra riskminimering', {'fields': ['extra_monitoring', 'upper_limit',
                                              'lower_limit']}),
         ]
     readonly_fields = ['created', 'updated']
     list_display = ['name', 'active', 'created', 'updated']
-
+    inlines = [RiskAnalysisInline]
+    
 @admin.register(Temperature)
 class TemperatureAdmin(admin.ModelAdmin):
     fieldsets = [
@@ -97,6 +108,8 @@ class TemperatureAdmin(admin.ModelAdmin):
         ('Signering',       {'fields': ['signature', 'comment']})
         ]
     list_display = ['control_point', 'date', 'anomaly', 'signature']
+    list_filter = ['anomaly']
+    #search_fields = ['control_point', 'date', 'signature']
     
     def save_model(self, request, obj, FridgeControlForm, change):
         higher = obj.measured > obj.control_point.prescribedMaxTemp
@@ -132,12 +145,12 @@ class FacilityDamageAdmin(admin.ModelAdmin):
 @admin.register(Delivery)
 class DeliveryAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,              {'fields': ['supplier', 'date']}),
+        (None,              {'fields': ['supplier', 'date', 'note']}),
         ('Genomgång',       {'fields': ['smell', 'damaged', 'expired']}),
         ('Signering',       {'fields': ['signature']}),
         ]
 
-    list_display = ['supplier', 'date', 'anomaly', 'signature']
+    list_display = ['supplier', 'date', 'note', 'anomaly', 'signature']
 
     def save_model(self, request, obj, form, change):
         if not obj.smell or not obj.damaged or not obj.expired:
@@ -191,6 +204,6 @@ class SupplierAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,              {'fields': ['name', 'contact', 'phone', 'email']}),
         ('Beställningar',   {'fields': ['order_day']}),
-        ('Beskrivning',     {'fields': ['description', 'goods', 'other']}),
+        ('Beskrivning',     {'fields': ['description', 'other']}),
         ]
     list_display = ['name', 'contact', 'phone', 'email', 'order_day']

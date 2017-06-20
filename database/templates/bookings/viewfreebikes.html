@@ -1,0 +1,20 @@
+{% extends "admin/app_index.html" %}
+{% load i18n admin_modify %}
+{% block extrahead %}{{ block.super }}
+{% url jsi18n as jsi18nurl %}
+<script src="{{ jsi18nurl}}" type="text/javascript"><!--mce:0--></script>  
+{% endblock %}
+{% block extrastyle %}{{ block.super }}
+{% endblock %}
+{% block bodyclass %}{{ opts.app_label }}-{{ opts.object_name.lower }} change-form{% endblock %}
+{% block breadcrumbs %}{% if not is_popup %}
+<div class="breadcrumbs">  
+     <a href="../../admin/">{% trans "Home" %}</a> ›
+     {% trans 'Se alla bokningar' %}</div>
+{% endif %}{% endblock %}
+
+{% block content %}
+	<h1 class='header'>Lediga cyklar</h1>
+	{{ calendar }}
+
+{% endblock %}
