@@ -232,6 +232,10 @@ class BookingsAdmin(admin.ModelAdmin):
         '''
         queryset.update(status='cmplt')
     complete.short_description = 'Markera som genomförd'
+    
+    def confirm_booking(self, request, queryset):
+        queryset.update(status= 'conf')
+    confirm_booking.short_description = 'Bekräfta bokning'
 
 @admin.register(RoomsBooking)
 class RoomsBookingAdmin(admin.ModelAdmin):

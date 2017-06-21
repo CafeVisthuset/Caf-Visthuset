@@ -332,12 +332,14 @@ def package_booking(request, slug):
                                     booking=booking)
                             
             # Should not happen
-            if not success:
-                '''
-                TODO:
-                # Implement report if something goes wrong and send an email to us. 
-                '''
-                return render(request, 'failed.html')
+            #if not success:
+            #    '''
+            #    TODO:
+            #    # Implement report if something goes wrong and send an email to us. 
+            #    '''
+            #    return render(request, 'failed.html')
+            booking.save()
+            return redirect('database:confirmation', pk = booking.booking)
         
     else:
         form = CustomerPackageBookingForm(initial={'package': package.title})
@@ -363,7 +365,10 @@ def confirmation_view(request, pk):
         'email': booking.guest.email})
     
     # Page texts
-    pagename ='bikeconf'
+    if booking.package:
+        pagename = 'packageconf'
+    else:
+        pagename ='bikeconf'
     page = Page.objects.get(code=pagename)
     texts = (PageContent.objects.filter(page__code=pagename, publish=True).exclude(shortname='Cykelbekräftelse')
              .order_by('order'))
@@ -375,11 +380,11 @@ def confirmation_view(request, pk):
     obj = EmailTexts.objects.get(name='CykelTack')
     
     plain_text = Template(obj.plain_text)
-    html_content = Template(obj.html_message)
+    #html_content = Template(obj.html_message)
     
     send_mail(obj.title, plain_text.render(c), 'boka@cafevisthuset.se',
-                                [booking.guest.email], ['boka@cafevisthuset.se'],
-                                html_message=html_content.render(c))
+                                [booking.guest.email], ['boka@cafevisthuset.se'])
+                                #html_message=html_content.render(c))
     
     return render(request, 'bookings/confirmation.html', {'page': page,
                                                           'headline': headline.render(c),
