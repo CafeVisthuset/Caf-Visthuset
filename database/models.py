@@ -156,7 +156,7 @@ class Bike(models.Model):
     class Meta:
         verbose_name = 'cykel'
         verbose_name_plural = 'cyklar'
-        ordering = ['number']
+        ordering = ['-size__wheelsize', 'number']
 
        
 class BikeExtra(models.Model):
@@ -355,36 +355,29 @@ Guest model, inherits from GuestUser (Proxymodel of User) and GuestExtra
 
 GuestUser also has an extended manager that sorts out guests from other users
 '''
-class GuestManager(models.Manager):
-    
-    def get_queryset(self):
-        return super(GuestManager, self).get_queryset().exclude(
-            Q(is_staff=True) | Q(is_superuser=True))
-        
+class GuestManager(models.Manager):        
     def post_get_or_create(self, first_name, last_name, email, **kwargs):
         '''
         Gets or creates a guest user based on information passed from a booking form.
         '''
         try:
             # first try to find by email
-            guest = Guest.objects.get(email=email)
+            guest = self.get(email=email)
         except MultipleObjectsReturned:
             # specify the search
-            guest = Guest.objects.get(first_name=first_name, last_name=last_name, email=email)
+            guest = self.get(first_name=first_name, last_name=last_name, email=email)
             
         except ObjectDoesNotExist:
             # If the object doees not exist, create a new one
-            password = User.objects.make_random_password()
             try:
-                guest = Guest.objects.create(username=email, password=password, first_name=first_name,
+                guest = self.create(first_name=first_name,
                               last_name = last_name, email=email,
                               phone_number = kwargs['kwargs']['phone_number'],
                               newsletter = kwargs['kwargs']['newsletter'])
             except:
                 # if the username is already taken, create a unique username for the person
                 # this hopefully works, otherwise it fails.
-                username= ','.join([email, first_name, last_name])
-                guest = Guest.objects.create(username = username, password=password, first_name=first_name,
+                guest = self.create(first_name=first_name,
                               last_name = last_name, email=email,
                               phone_number = kwargs['kwargs']['phone_number'],
                               newsletter = kwargs['kwargs']['newsletter'])
@@ -404,12 +397,30 @@ class GuestUser(User):
         
     
 class Guest(GuestUser, GuestExtra):
-    objects = GuestManager()
+    #objects = GuestManager()
     
     class Meta:
         verbose_name = 'gäst'
         verbose_name_plural = 'gäster'
+
+class GuestProfile(models.Model):
+    first_name = models.CharField(max_length=30, verbose_name = 'Förnamn')
+    last_name = models.CharField(max_length=30, verbose_name = 'Efternamn')
+    email = models.EmailField(verbose_name = 'Epost')
+    phone_number = models.CharField(max_length=24, null=True, blank=True, verbose_name = 'Telefonnummer')
+    newsletter = models.BooleanField(default = True, verbose_name = 'Nyhetsbrev')
+    
+    objects = GuestManager()
+    
+    date_joined = models.DateTimeField(auto_now_add = True, verbose_name='Profil skapad')
+    
+    class Meta:
+        verbose_name = 'Gästprofil'
+        verbose_name_plural = 'Gästprofiler'
         
+    def __str__(self):
+        return '{} {}'.format(self.first_name, self.last_name)
+
 '''
 Model and validator for discount code
 '''
@@ -518,9 +529,9 @@ class BookingManager(models.Manager):
 class Booking(models.Model):
     # Guest
     guest = models.ForeignKey(
-        Guest,
+        GuestProfile,
         related_name='guest',
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         verbose_name='gäst',
         )
     

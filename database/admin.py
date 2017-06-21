@@ -2,7 +2,7 @@ from django.contrib import admin
 from database.models import *
 from Economy.models import Staff, Employee
 from database.forms import BikesForm, AdminLunchBookingForm, CreateAvailableBikeForm,\
-    BikeBookingForm
+    BikeBookingForm, AdminGuestForm
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 from django.contrib.auth.admin import UserAdmin
@@ -259,20 +259,19 @@ class StaffAdmin(UserAdmin):
     list_display = ['username', 'first_name', 'last_name', 'phone_number', 'hours_worked', 'wage',
                     'tax', 'drawTax']
     
-
-class GuestAdmin(StaffAdmin):
+@admin.register(GuestProfile)
+class GuestAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,      {'fields': ['username', 'password', 'last_login', 'date_joined']}),
-        ('Personlig information', {'fields': ['first_name', 'last_name', 'email', 'phone_number', 'newsletter']}),
-        ('Övrigt',      {'classes': ('collapse', ),
-                        'fields': ['is_active']}),
+        (None,        {'fields': ['first_name', 'last_name', 'email', 'phone_number', 'newsletter']}),
+        ('Info',      {'classes': ('collapse', ),
+                       'fields': ['date_joined']}),
         ]
     
-    readonly_fields = ['last_login', 'date_joined']
-    list_display = ['username', 'first_name', 'last_name', 'phone_number', 'newsletter']
+    readonly_fields = ['date_joined']
+    list_display = ['first_name', 'last_name', 'email', 'phone_number', 'newsletter']
 
+    
 admin.site.disable_action('delete_selected')
 admin.site.unregister(User)
 admin.site.register(Employee, StaffAdmin)
-admin.site.register(Guest, GuestAdmin)
 admin.site.register(User)

@@ -6,7 +6,7 @@ Created on 9 nov. 2016
 from django import forms
 from .models import Booking, Lunch
 from database.models import BikeExtra, Bike, LunchBooking, BikesBooking,\
-    BikeAvailable, Package
+    BikeAvailable, Package, Guest
 from .choices import Action_Choices, YEARS, MONTHS
 from django.forms.formsets import BaseFormSet
 from django.forms.widgets import SelectDateWidget, Select
@@ -272,4 +272,14 @@ class CustomerPackageBookingForm(forms.Form):
     other = forms.CharField(widget=forms.Textarea(attrs={'class':'form-control'}), max_length=200,
                             required=False, label='Övrig informatio, t.ex. allergier eller hur ni vill dela upp er i rummen.')
     
-    
+class AdminGuestForm(forms.ModelForm):
+    class Meta:
+        model = Guest
+        exclude = ['password1', 'password2']
+        labels = {
+            'first_name': 'Förnamn',
+            'last_name' : 'Efternamn',
+            'email' : 'epost',
+            'phone_number': 'Telefonnummer',
+            'newsletter': 'Nyhetsbrev'
+            }

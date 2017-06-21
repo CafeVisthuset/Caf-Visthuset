@@ -132,7 +132,7 @@ def customer_bike_booking_view(request):
                                          info@cafevisthuset.se</a> så kanske vi kan hjälpa till.
                                          '''.format(biketype_dict[biketype]))})
             # Get or create guest
-            guest = Guest.objects.post_get_or_create(data['first_name'],
+            guest = GuestProfile.objects.post_get_or_create(data['first_name'],
                                                      data['last_name'],
                                                      data['email'],
                                                      kwargs={'phone_number': data['phone_number'],
@@ -251,7 +251,7 @@ def package_booking(request, slug):
                                          info@cafevisthuset.se</a> så kanske vi kan hjälpa till.
                                          '''.format(biketype_dict[biketype]))})
             # Get or create guest
-            guest = Guest.objects.post_get_or_create(data['first_name'],
+            guest = GuestProfile.objects.post_get_or_create(data['first_name'],
                                                      data['last_name'],
                                                      data['email'],
                                                      kwargs={'phone_number': data['phone_number'],
