@@ -4,6 +4,7 @@ a {
 
 body {
 	font-family: optima, areal, helvetica;
+	background-image: url("background.jpg");
 	background-color: lightblue;
 	max-width: 1200px;
 }
