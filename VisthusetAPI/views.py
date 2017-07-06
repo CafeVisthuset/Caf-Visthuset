@@ -8,7 +8,7 @@ from django.views import generic
 def IndexView(request):
     events = Event.objects.filter(published='True').order_by('start_date')
     
-    return render(request, 'visthuset_base.html', {'events': events})
+    return render(request, 'index.html', {'events': events})
 
 class APIIndexView(generic.TemplateView):
     template_name = 'APIindex.html'
