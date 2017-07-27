@@ -16,14 +16,7 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from VisthusetAPI.views import *
-from rest_framework import routers
-from Economy.views import UserViewSet
 import database.views as booking
-import VisthusetAPI
-
-# Routers provide an easy way of automatically determining the URL conf.
-router = routers.DefaultRouter()
-router.register(r'users', UserViewSet)
 
 
 urlpatterns = [
@@ -44,7 +37,5 @@ urlpatterns = [
     url(r'^economy/', include('Economy.urls')),
     url(r'^booking/', include('database.urls')),
     url(r'^docs/', include('docs.urls')),
-    url(r'^root/', include(router.urls)),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^admin/availablebike/$', booking.create_available_bikes, name='createbikes'),
 ]

@@ -79,9 +79,10 @@ class BikeBookingForm(forms.ModelForm):
         for bike in all_booked_bikes:
             if bike.bookings != cleaned_data.get('id'):
                 booked_by_me = False
-
+        print('booked by me', booked_by_me)
+        print('date_list_in_bike list ', date_list_in_bike_list(date_list, bike_dates))
         # Validation to make sure that the bike is not already booked
-        if not date_list_in_bike_list(date_list, bike_dates) and booked_by_me == False:
+        if not date_list_in_bike_list(date_list, bike_dates) or booked_by_me == False:
                 raise forms.ValidationError(
                     'Denna cykel är inte tillgänglig ett eller flera av dessa datum'
                 )
@@ -208,6 +209,7 @@ class CustomerBikeBookingForm(forms.Form):
     newsletter = forms.BooleanField(
         label='Nyhetsbrev',
         initial = True,
+        required=False,
         help_text= 'Vill du ha nyheter och erbjudanden från oss?')
     
     # Extra message

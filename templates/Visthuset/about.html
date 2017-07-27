@@ -12,7 +12,7 @@
 	<div class="col-s-12 col-md-6">
 		<h2>{{ text.headline }}</h2>
 		{% if text.image %}
-		<img class="img-responsive col-s-12 col-md-3" src="/{{ text.image }}" alt="{{ text.image_alt }}">
+		<img class="img-responsive col-s-12 col-md-3" src="{{ text.image.url }}" alt="{{ text.image_alt }}">
 		{% endif %}
 		<p>{{ text.text | safe }}</p>
 	</div>

@@ -13,3 +13,14 @@
 
 db.sqlite3
 /.DS_Store
+/media/
+/static/
+/cleaning/migrations/*
+/database/migrations/*
+/docs/migrations/*
+/Economy/migrations/*
+/events/migrations/*
+/staticfiles/
+/VisthusetAPI/wsgi.py
+/VisthusetAPI/settings.py
+*.pyc

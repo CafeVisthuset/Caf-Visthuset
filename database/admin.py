@@ -10,7 +10,6 @@ from django.contrib.auth.models import User
 from database.helperfunctions import create_date_list
 from datetime import timedelta
 
-
 # register bikes for users
 class DamagesInline(admin.TabularInline):
     model = Damages
@@ -170,15 +169,27 @@ class BookingsAdmin(admin.ModelAdmin):
         ('Specifikationer', {'fields': ['total', 'booked_bike_report', 'booked_room_report',
                                         'booked_lunch_report']}),
         ]
-    list_display = ['booking', 'status', 'guest', 'total', 'created_at', 'updated_at','adults', 'children']
-    readonly_fields = ['booking', 'created_at', 'updated_at', 'booked_bike_report', 'booked_room_report',
+    list_display = ['booking', 'status', 'guest', 'start_date', 'total', 'created_at', 'updated_at','adults', 'children']
+    list_filter = ['created_at', 'status']
+    search_fields = ['booking', 'guest__first_name', 'guest__last_name', 'guest__email']
+    readonly_fields = ['created_at', 'updated_at', 'booked_bike_report', 'booked_room_report',
                        'booked_lunch_report', 'total', 'status', 'longest_prel']
     actions = ['cancel_booking', 'preliminary', 'make_active', 'complete']
-
     inlines = [BikesBookingInLine, RoomsBookingInLine, LunchBookingInLine]
-
+    
+    # REPORTS
+    def start_report(self, instance):
+        dates = [bikes.from_date for bikes in instance.booked_bike.all()]
+        if not None in dates and dates != []:
+            dates.sort()
+            stdate = dates[0]
+        else:
+            stdate = None
+        return '{}'.format(stdate)
+    start_report.short_description = 'Startdatum'
+    
     def booked_bike_report(self, instance):
-        return format_html_join(mark_safe('<br/>'),
+        return format_html_join(mark_safe('<br>'),
                                 'Typ: {}cykel, Nummer: {}',
                                 ((str(bike.bike.attribute), str(bike.bike.number, )) for bike in instance.booked_bike.all()
                                 ) or mark_safe("<span class='errors'>Det finns inga cykelbokningar registrerade hos denna bokning</span>")
@@ -186,7 +197,7 @@ class BookingsAdmin(admin.ModelAdmin):
     booked_bike_report.short_description = 'Cyklar för denna bokning'
     
     def booked_room_report(self, instance):
-        return format_html_join(mark_safe('<br/>'),
+        return format_html_join(mark_safe('<br>'),
                                 'Rum: {}, Antal personer: {}, Incheckning: {}, Utcheckning: {}',
                                 ((str(room.room), str(room.numberOfGuests), str(room.from_date), str(room.to_date), ) for room in instance.booked_rooms.all()
                                 ) or mark_safe("<span class='errors'>Det finns inga rumsbokningar registrerade hos denna bokning</span>")
@@ -194,13 +205,14 @@ class BookingsAdmin(admin.ModelAdmin):
     booked_room_report.short_description = 'Rum för denna bokning'
     
     def booked_lunch_report(self, instance):
-        return format_html_join(mark_safe('<br/>'),
+        return format_html_join(mark_safe('<br>'),
                                 'Typ: {}, Antal: {}, Dag:{}',
                                 ((str(lunch.type), str(lunch.quantity), str(lunch.day),  ) for lunch in instance.booked_lunches.all()
                                 ) or mark_safe("<span class='errors'>Det finns inga luncher bokade i denna bokning</span>")
                                 )
     booked_lunch_report.short_description = 'Luncher för denna bokning'
     
+    # ACTIONS
     def cancel_booking(self, request, queryset):
         for item in queryset:
             bk_books = BikesBooking.objects.filter(booking=item.booking)
@@ -237,6 +249,13 @@ class BookingsAdmin(admin.ModelAdmin):
         queryset.update(status= 'conf')
     confirm_booking.short_description = 'Bekräfta bokning'
 
+    # GETTERS
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return super(BookingsAdmin, self).get_readonly_fields(request, obj)
+        else:
+            return self.readonly_fields + ['booking']
+    
 @admin.register(RoomsBooking)
 class RoomsBookingAdmin(admin.ModelAdmin):
     fieldsets = [

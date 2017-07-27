@@ -1,10 +1,9 @@
 {% load static %}
 {% load l10n %}
 <!DOCTYPE html>
-<html>
+<html lang="sv">
 	<head>
     	<meta charset="utf-8">
-    	<meta lang="sv">
     	<meta name="viewport" content="width=device-width, initial-scale=1">
     	{% block title %}{% endblock %}
     	{% include 'stylesheets.html' %}
@@ -13,10 +12,11 @@
 		{% block header %}{% endblock %}
     	<main>
     	{% block content %}
-		{% endblock %}
+		  {% endblock %}
     	</main>
-    	{% include 'javascripts.html' %}
-    	{% block javascripts %}{% endblock %}
-    	{% include 'footer.html' %}
+
     </body>
+		{% include 'javascripts.html' %}
+		{% block javascripts %}{% endblock %}
+		{% include 'footer.html' %}
 </html>

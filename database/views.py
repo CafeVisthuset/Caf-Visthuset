@@ -166,7 +166,7 @@ def customer_bike_booking_view(request):
             for lunchtype, amount in lunches.items():
                 if amount > 0:
                     LunchBooking.objects.create(
-                            type=Lunch.objects.get(type=lunchtype), 
+                            type=Lunch.objects.get(slug=lunchtype), 
                             day=start_date,
                             quantity=amount,
                             booking=booking)
@@ -183,8 +183,8 @@ def customer_bike_booking_view(request):
 @staff_member_required
 def booking_calendar(request):
     today = datetime.today()
-    bookings = BikesBooking.objects.all().order_by('from_date').exclude(bike=None)
-    calendar = BookingsCalendar(bookings).formatmonth(year=today.year, month=5)
+    bookings = BikeAvailable.objects.all().order_by('available_date').exclude(bookings=None)
+    calendar = BookingsCalendar(bookings).formatmonth(year=today.year, month=today.month)
     return render(request, 'bookings/viewfreebikes.html', {'calendar': mark_safe(calendar),})
 
 @staff_member_required

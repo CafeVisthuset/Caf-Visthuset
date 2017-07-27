@@ -54,6 +54,9 @@ class Page(models.Model):
     def __str__(self):
         return self.name
     
+    def get_absolute_url(self):
+        pass
+    
     class Meta:
         verbose_name = 'sida'
         verbose_name_plural = 'sidor'

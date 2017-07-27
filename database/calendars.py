@@ -221,7 +221,7 @@ class BookingsCalendar(HTMLCalendar):
         return super(BookingsCalendar, self).formatmonth(year, month)
     
     def group_bookings_by_day(self, bookings):
-        field = lambda booking: booking.from_date
+        field = lambda booking: booking.available_date
         return dict(
             [(day, list(items)) for day, items in groupby(bookings, field)])
         

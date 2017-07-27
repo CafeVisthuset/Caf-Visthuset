@@ -51,7 +51,7 @@ class Lunch(models.Model):
     def __str__(self):
         return self.name
 
-        
+    
 class Utilities(models.Model):
     describtion = models.TextField()
     number = models.PositiveIntegerField()
@@ -59,7 +59,7 @@ class Utilities(models.Model):
     
     class Meta:
         verbose_name= 'tillbehör'
-        
+
 
 '''
 Bike models
@@ -1084,7 +1084,7 @@ def book_from_admin(sender, instance, update_fields, **kwargs):
         for date in date_list:
             BikeAvailable.objects.book_bike(instance, instance.bike, date)
     else:
-        print('else')
+        print(update_fields)
         # If object is changed, first unbook the old bikes and then book the new bikes
         old_booked_bikes = BikeAvailable.objects.filter(bookings=instance)
         for bike in old_booked_bikes:
